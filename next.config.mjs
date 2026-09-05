@@ -1,3 +1,44 @@
+import dns from 'node:dns'
+
+try {
+  dns.setDefaultResultOrder('ipv4first')
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4'])
+
+  const { Resolver } = dns
+  const fallbackResolver = new Resolver()
+  fallbackResolver.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4'])
+
+  const origLookup = dns.lookup
+  dns.lookup = function (hostname, options, callback) {
+    let cb = callback
+    let opts = options
+    if (typeof opts === 'function') {
+      cb = opts
+      opts = {}
+    } else if (typeof opts === 'number') {
+      opts = { family: opts }
+    } else if (!opts) {
+      opts = {}
+    }
+
+    origLookup.call(dns, hostname, opts, (err, address, family) => {
+      if (err) {
+        fallbackResolver.resolve4(hostname, (rErr, addresses) => {
+          if (rErr || !addresses || addresses.length === 0) {
+            return cb(err)
+          }
+          if (opts.all) {
+            return cb(null, addresses.map((addr) => ({ address: addr, family: 4 })))
+          }
+          return cb(null, addresses[0], 4)
+        })
+      } else {
+        return cb(null, address, family)
+      }
+    })
+  }
+} catch {}
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
@@ -23,6 +64,12 @@ const nextConfig = {
       { pathname: '/api/img' },
       { pathname: '/images/**' },
     ],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'a-f.site' },
+      { protocol: 'http', hostname: 'a-f.site' },
+      { protocol: 'https', hostname: '*.sslip.io' },
+      { protocol: 'http', hostname: '*.sslip.io' },
+    ],
     minimumCacheTTL: 604800,
   },
   async redirects() {
@@ -35,6 +82,60 @@ const nextConfig = {
         destination: '/cars/import/:slug',
         permanent: true,
       },
+      // Privacy Policy multilingual routes
+      { source: '/privacy', destination: '/privacy-policy', permanent: true },
+      { source: '/privacy-policy-ar', destination: '/privacy-policy?locale=ar', permanent: true },
+      { source: '/privacy-policy-en', destination: '/privacy-policy?locale=en', permanent: true },
+      { source: '/privacy-policy-he', destination: '/privacy-policy?locale=he', permanent: true },
+      { source: '/ar/privacy-policy', destination: '/privacy-policy?locale=ar', permanent: true },
+      { source: '/en/privacy-policy', destination: '/privacy-policy?locale=en', permanent: true },
+      { source: '/he/privacy-policy', destination: '/privacy-policy?locale=he', permanent: true },
+      { source: '/ar/privacy-policy-ar', destination: '/privacy-policy?locale=ar', permanent: true },
+      { source: '/en/privacy-policy-en', destination: '/privacy-policy?locale=en', permanent: true },
+      { source: '/he/privacy-policy-he', destination: '/privacy-policy?locale=he', permanent: true },
+
+      // Terms & Conditions multilingual routes
+      { source: '/terms-ar', destination: '/terms?locale=ar', permanent: true },
+      { source: '/terms-en', destination: '/terms?locale=en', permanent: true },
+      { source: '/terms-he', destination: '/terms?locale=he', permanent: true },
+      { source: '/ar/terms', destination: '/terms?locale=ar', permanent: true },
+      { source: '/en/terms', destination: '/terms?locale=en', permanent: true },
+      { source: '/he/terms', destination: '/terms?locale=he', permanent: true },
+      { source: '/ar/terms-ar', destination: '/terms?locale=ar', permanent: true },
+      { source: '/en/terms-en', destination: '/terms?locale=en', permanent: true },
+      { source: '/he/terms-he', destination: '/terms?locale=he', permanent: true },
+      { source: '/ar/terms-and-conditions', destination: '/terms?locale=ar', permanent: true },
+      { source: '/en/terms-and-conditions', destination: '/terms?locale=en', permanent: true },
+      { source: '/he/terms-and-conditions', destination: '/terms?locale=he', permanent: true },
+      { source: '/ar/terms-conditions', destination: '/terms?locale=ar', permanent: true },
+      { source: '/en/terms-conditions', destination: '/terms?locale=en', permanent: true },
+      { source: '/he/terms-conditions', destination: '/terms?locale=he', permanent: true },
+
+      // Refund & Returns multilingual routes
+      { source: '/return-policy-ar', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/return-policy-en', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/return-policy-he', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/refund-returns-ar', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/refund-returns-en', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/refund-returns-he', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/refund-and-returns-ar', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/refund-and-returns-en', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/refund-and-returns-he', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/ar/return-policy', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/en/return-policy', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/he/return-policy', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/ar/return-policy-ar', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/en/return-policy-en', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/he/return-policy-he', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/ar/refund-returns', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/en/refund-returns', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/he/refund-returns', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/ar/refund-and-returns', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/en/refund-and-returns', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/he/refund-and-returns', destination: '/return-policy?locale=he', permanent: true },
+      { source: '/ar/refund_returns', destination: '/return-policy?locale=ar', permanent: true },
+      { source: '/en/refund_returns', destination: '/return-policy?locale=en', permanent: true },
+      { source: '/he/refund_returns', destination: '/return-policy?locale=he', permanent: true },
     ]
   },
   async headers() {
