@@ -19,7 +19,10 @@
  *   define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', '<a long random string>' );
  */
 
-const RAW_ENDPOINT = (process.env.WORDPRESS_GRAPHQL_ENDPOINT ?? '').trim()
+const LIVE_ENDPOINT = 'https://a-f.site/graphql'
+const ENV_ENDPOINT = (process.env.WORDPRESS_GRAPHQL_ENDPOINT ?? '').trim()
+const RAW_ENDPOINT =
+  ENV_ENDPOINT && !ENV_ENDPOINT.includes('sslip.io') ? ENV_ENDPOINT : LIVE_ENDPOINT
 
 /** The configured GraphQL endpoint, or an empty string when unset. */
 export const wpEndpoint = RAW_ENDPOINT

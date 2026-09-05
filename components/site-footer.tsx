@@ -7,7 +7,7 @@ import { useLanguage } from '@/lib/i18n/language-context'
 import { useStore } from '@/lib/store-context'
 
 export function SiteFooter() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const store = useStore()
 
   const columns = [
@@ -117,6 +117,26 @@ export function SiteFooter() {
           <p>
             © {new Date().getFullYear()} {store.name}. {t.footer.rights}
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <Link
+              href="/privacy-policy"
+              className="transition-colors hover:text-foreground"
+            >
+              {locale === 'ar' ? 'سياسة الخصوصية' : locale === 'he' ? 'מדיניות הפרטיות' : 'Privacy Policy'}
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-foreground"
+            >
+              {locale === 'ar' ? 'الشروط والأحكام' : locale === 'he' ? 'תנאים והגבלות' : 'Terms & Conditions'}
+            </Link>
+            <Link
+              href="/return-policy"
+              className="transition-colors hover:text-foreground"
+            >
+              {locale === 'ar' ? 'سياسة الإرجاع والاستبدال' : locale === 'he' ? 'מדיניות החזרה והחלפה' : 'Refund & Returns'}
+            </Link>
+          </div>
           <p>{t.footer.slogan}</p>
         </div>
       </div>

@@ -3,6 +3,8 @@ import { loadAccount } from '@/lib/auth/queries'
 import { AccountGuard } from '@/components/account/account-guard'
 import { DashboardView } from '@/components/account/dashboard-view'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'My account | ALI FLEET',
   description:

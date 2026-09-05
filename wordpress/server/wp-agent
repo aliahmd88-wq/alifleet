@@ -51,14 +51,14 @@ set -euo pipefail
 #
 #  تجيب الاسم منين:  docker ps --format '{{.Names}}\t{{.Image}}' | grep -i wordpress
 # ---------------------------------------------------------------------------
-WP_CONTAINER="wordpress-yo985p014jyz554zjo2oo6w7"
+WP_CONTAINER="wordpress-nq1w5m20z22e258i6ttd1axo"
 
 #  مسار WordPress **جوه** الكونتينر (صورة wordpress:latest الرسمية)
 WP_DOCROOT="/var/www/html"
 
 #  اسم كونتينر قاعدة البيانات — للقراءة في doctor بس. السكربت **مبينفّذش**
 #  ولا أمر واحد عليه.
-DB_CONTAINER="mysql-yo985p014jyz554zjo2oo6w7"
+DB_CONTAINER="mysql-nq1w5m20z22e258i6ttd1axo"
 
 DOCKER="/usr/bin/docker"
 
