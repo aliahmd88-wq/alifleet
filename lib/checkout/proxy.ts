@@ -98,6 +98,22 @@ function mapCmsPath(pathname: string) {
   }
   if (path.startsWith('/product/')) return `/products/${path.slice('/product/'.length)}`
 
+  // Legal & Policy pages
+  if (path === '/privacy-policy' || path === '/privacy-policy/' || path === '/privacy' || path === '/privacy/') return '/privacy-policy'
+  if (path === '/privacy-policy-ar' || path === '/privacy-policy-ar/' || path === '/ar/privacy-policy-ar' || path === '/ar/privacy-policy-ar/') return '/privacy-policy?locale=ar'
+  if (path === '/privacy-policy-en' || path === '/privacy-policy-en/' || path === '/en/privacy-policy-en' || path === '/en/privacy-policy-en/') return '/privacy-policy?locale=en'
+  if (path === '/privacy-policy-he' || path === '/privacy-policy-he/' || path === '/he/privacy-policy-he' || path === '/he/privacy-policy-he/') return '/privacy-policy?locale=he'
+
+  if (path === '/terms' || path === '/terms/' || path === '/terms-and-conditions' || path === '/terms-and-conditions/') return '/terms'
+  if (path === '/terms-ar' || path === '/terms-ar/' || path === '/ar/terms-ar' || path === '/ar/terms-ar/') return '/terms?locale=ar'
+  if (path === '/terms-en' || path === '/terms-en/' || path === '/en/terms-en' || path === '/en/terms-en/') return '/terms?locale=en'
+  if (path === '/terms-he' || path === '/terms-he/' || path === '/he/terms-he' || path === '/he/terms-he/') return '/terms?locale=he'
+
+  if (path === '/return-policy' || path === '/return-policy/' || path === '/refund_returns' || path === '/refund_returns/' || path === '/refund-returns' || path === '/refund-returns/') return '/return-policy'
+  if (path === '/return-policy-ar' || path === '/return-policy-ar/' || path === '/ar/return-policy-ar' || path === '/ar/return-policy-ar/') return '/return-policy?locale=ar'
+  if (path === '/return-policy-en' || path === '/return-policy-en/' || path === '/en/return-policy-en' || path === '/en/return-policy-en/') return '/return-policy?locale=en'
+  if (path === '/return-policy-he' || path === '/return-policy-he/' || path === '/he/return-policy-he' || path === '/he/return-policy-he/') return '/return-policy?locale=he'
+
   return `${CMS_PATH_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
 }
 

@@ -45,18 +45,25 @@ export function LanguageProvider({
   // before falling back to the stored preference and persist it for the server.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const requested = params.get('locale')
+    const rawLocale = params.get('locale')
+    const requested = typeof rawLocale === 'string' ? rawLocale.trim().toLowerCase() : null
+    const isPolicyPath =
+      /^\/(privacy-policy|terms|return-policy|terms-and-conditions|terms-conditions|refund-returns|refund_returns|refund-and-returns)/.test(
+        window.location.pathname
+      )
     if (isLocale(requested)) {
       setLocaleState(requested)
       window.localStorage.setItem(LOCALE_STORAGE_KEY, requested)
       document.cookie = `${LOCALE_STORAGE_KEY}=${requested}; path=/; max-age=31536000; samesite=lax`
-      params.delete('locale')
-      const query = params.toString()
-      window.history.replaceState(
-        {},
-        '',
-        `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
-      )
+      if (!isPolicyPath) {
+        params.delete('locale')
+        const query = params.toString()
+        window.history.replaceState(
+          {},
+          '',
+          `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
+        )
+      }
       return
     }
 

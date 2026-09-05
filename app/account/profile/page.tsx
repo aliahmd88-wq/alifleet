@@ -3,6 +3,8 @@ import { loadAccount } from '@/lib/auth/queries'
 import { AccountGuard } from '@/components/account/account-guard'
 import { ProfileView } from '@/components/account/profile-view'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Personal details | ALI FLEET',
   description:

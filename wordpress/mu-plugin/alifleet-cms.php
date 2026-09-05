@@ -796,7 +796,7 @@ add_action(
 		if ( ! class_exists( 'ACF' ) ) {
 			$problems[] = 'Advanced Custom Fields is not active — all page content will be empty.';
 		}
-		if ( class_exists( 'WPGraphQL' ) && class_exists( 'ACF' ) && ! class_exists( 'WPGraphQL\ACF\ACF' ) && ! function_exists( 'wpgraphql_acf_init' ) ) {
+		if ( class_exists( 'WPGraphQL' ) && class_exists( 'ACF' ) && ! class_exists( 'WPGraphQLAcf' ) && ! function_exists( 'graphql_acf_init' ) ) {
 			$problems[] = 'WPGraphQL for ACF is not active — ACF fields will not appear in the GraphQL schema.';
 		}
 		if ( ! defined( 'GRAPHQL_JWT_AUTH_SECRET_KEY' ) ) {

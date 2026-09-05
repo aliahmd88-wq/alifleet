@@ -38,7 +38,7 @@ set -euo pipefail
 #  إعدادات — عدّلها لو مختلفة عندك
 # ---------------------------------------------------------------------------
 AGENT_USER="afagent"
-EXPIRE_DAYS="3"          # الحساب بيتقفل تلقائيًا بعد كام يوم
+EXPIRE_DAYS="30"         # الحساب بيتقفل تلقائيًا بعد كام يوم
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUDOERS_SRC="$HERE/alifleet-agent.sudoers"
@@ -233,7 +233,7 @@ do_create() {
   c_head "4/7 — تاريخ انتهاء تلقائي"
   EXPIRE_DATE="$(date -u -d "+${EXPIRE_DAYS} days" +%Y-%m-%d)"
   chage -E "$EXPIRE_DATE" "$AGENT_USER"
-  c_ok "الحساب بيتقفل تلقائيًا يوم $EXPIRE_DATE (بعد $EXPIRE_DAYS أيام)"
+  c_ok "الحساب بيتقفل تلقائيًا يوم $EXPIRE_DATE (بعد $EXPIRE_DAYS يومًا)"
 
   # -----------------------------------------------------------------------
   c_head "5/7 — تركيب wp-agent (الباب الوحيد على الكونتينر)"
