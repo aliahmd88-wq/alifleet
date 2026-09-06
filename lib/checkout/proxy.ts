@@ -333,14 +333,6 @@ export async function proxyWooRequest(request: Request, path: string[]) {
   const targetPath = isCheckoutPath && !joinedPath.endsWith('/') ? `${joinedPath}/` : joinedPath
   const target = new URL(targetPath, cmsOrigin)
   target.search = incomingUrl.search
-  console.log('[v0] Checkout proxy origin diagnostics:', {
-    requestUrl: request.url,
-    host: request.headers.get('host'),
-    forwardedHost: request.headers.get('x-forwarded-host'),
-    forwardedProto: request.headers.get('x-forwarded-proto'),
-    frontendOrigin: frontendOrigin(request),
-    target: target.toString(),
-  })
   if (isCheckoutPath) {
     // Polylang understands `lang`; the storefront uses `locale`. Normalize the
     // request so WooCommerce renders the same language as the Next.js site.

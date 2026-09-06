@@ -32,8 +32,9 @@ if ( ! defined( 'ALIFLEET_ALLOWED_ORIGINS' ) ) {
 		[
 							'https://alifleet.com',
 				'https://www.alifleet.com',
-				'http://rbzfx3doqcg2vx1hyichhewe.169.58.176.172.sslip.io',
-				'http://localhost:3000',
+  'http://rbzfx3doqcg2vx1hyichhewe.169.58.176.172.sslip.io',
+  'https://sb-6h9l3x6zv41u.vercel.run',
+  'http://localhost:3000',
 
 		]
 	);
