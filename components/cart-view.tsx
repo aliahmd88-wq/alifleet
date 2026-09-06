@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+
+import { useAuth } from '@/lib/auth/auth-context' 
 import { useFormStatus } from 'react-dom'
 import {
   AlertCircle,
@@ -62,6 +64,7 @@ function CheckoutSubmit({ label, pendingLabel }: { label: string; pendingLabel: 
 
 export function CartView({ catalog }: { catalog: PartSummary[] }) {
   const { t, locale } = useLanguage()
+  const { signedIn } = useAuth()
   const searchParams = useSearchParams()
   // The server action redirects back here with this flag when WooCommerce could
   // not be handed the basket, so the failure is visible instead of silent.
@@ -298,17 +301,35 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
 
             {checkoutReady && (
               <>
-                <form action={prepareCheckoutAction}>
-                  <input type="hidden" name="items" value={checkoutItems} />
-                  <input type="hidden" name="locale" value={locale} />
-                  <CheckoutSubmit
-                    label={t.cart.checkout}
-                    pendingLabel={t.cart.checkoutPending}
-                  />
-                </form>
-                <p className="mt-2.5 text-center text-xs text-muted-foreground">
-                  {t.cart.checkoutNote}
-                </p>
+                {signedIn ? (
+                  <>
+                    <form action={prepareCheckoutAction}>
+                      <input type="hidden" name="items" value={checkoutItems} />
+                      <input type="hidden" name="locale" value={locale} />
+                      <CheckoutSubmit
+                        label={t.cart.checkout}
+                        pendingLabel={t.cart.checkoutPending}
+                      />
+                    </form>
+                    <p className="mt-2.5 text-center text-xs text-muted-foreground">
+                      {t.cart.checkoutNote}
+                    </p>
+                  </>
+                ) : (
+                  <div className="mt-6 rounded-2xl bg-muted p-4 text-center">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {locale === 'ar'
+                        ? 'يجب تسجيل الدخول أو إنشاء حساب لإتمام الطلب.'
+                        : 'Please sign in or create an account to complete your order.'}
+                    </p>
+                    <Link
+                      href={`/account/login?redirect=${encodeURIComponent('/cart')}`}
+                      className="mt-3 inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+                    >
+                      {locale === 'ar' ? 'تسجيل الدخول' : 'Sign in to checkout'}
+                    </Link>
+                  </div>
+                )}
               </>
             )}
 
