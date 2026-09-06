@@ -10,6 +10,61 @@ import {
 } from './gate'
 
 const CMS_PATH_PREFIX = '/cms'
+const UPSTREAM_TIMEOUT_MS = 20_000
+const PRIVATE_NO_STORE = 'private, no-store, max-age=0, must-revalidate'
+
+function privateNoStoreHeaders(headers = new Headers()) {
+  headers.set('cache-control', PRIVATE_NO_STORE)
+  headers.set('pragma', 'no-cache')
+  headers.set('expires', '0')
+  headers.delete('etag')
+  headers.delete('last-modified')
+  return headers
+}
+
+function checkoutUnavailableResponse(request: Request, ajax = false) {
+  const responseHeaders = privateNoStoreHeaders()
+  if (ajax) {
+    responseHeaders.set('content-type', 'application/json; charset=utf-8')
+    return new Response(
+      JSON.stringify({
+        result: 'failure',
+        messages: 'Checkout is temporarily unavailable. Please try again.',
+      }),
+      { status: 503, headers: responseHeaders }
+    )
+  }
+
+  const method = request.method.toUpperCase()
+  if (method === 'GET' || method === 'HEAD') {
+    responseHeaders.set('location', '/cart?checkout=unavailable')
+    return new Response(null, { status: 303, headers: responseHeaders })
+  }
+
+  responseHeaders.set('content-type', 'text/plain; charset=utf-8')
+  return new Response('Checkout is temporarily unavailable. Please try again.', {
+    status: 503,
+    headers: responseHeaders,
+  })
+}
+
+export async function fetchWooUpstream(
+  input: Parameters<typeof fetch>[0],
+  init: RequestInit = {}
+) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, {
+      ...init,
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -212,12 +267,12 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
 }
 
 function copyResponseHeaders(source: Headers) {
-  const headers = new Headers()
-  for (const name of ['content-type', 'cache-control', 'etag', 'last-modified', 'vary']) {
+  const responseHeaders = new Headers()
+  for (const name of ['content-type', 'vary']) {
     const value = source.get(name)
-    if (value) headers.set(name, value)
+    if (value) responseHeaders.set(name, value)
   }
-  return headers
+  return privateNoStoreHeaders(responseHeaders)
 }
 
 function setCookiesFrom(response: Response) {
@@ -269,7 +324,7 @@ const CART_RESET_SCRIPT = `<script>(function(){try{window.localStorage.removeIte
 
 export async function proxyWooRequest(request: Request, path: string[]) {
   const cmsOrigin = wpStoreOrigin()
-  if (!cmsOrigin) return new Response('WordPress checkout is not configured.', { status: 503 })
+  if (!cmsOrigin) return checkoutUnavailableResponse(request)
 
   const incomingUrl = new URL(request.url)
   const joinedPath = `/${path.filter(Boolean).join('/')}`
@@ -313,7 +368,12 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     init.body = await request.arrayBuffer()
   }
 
-  const upstream = await fetch(target, init)
+  let upstream: Response
+  try {
+    upstream = await fetchWooUpstream(target, init)
+  } catch {
+    return checkoutUnavailableResponse(request)
+  }
   const upstreamCookies = setCookiesFrom(upstream)
   const responseHeaders = copyResponseHeaders(upstream.headers)
   for (const cookie of upstreamCookies) {
@@ -399,7 +459,7 @@ function rewriteJsonUrls(text: string, request: Request) {
  */
 export async function proxyWcAjaxRequest(request: Request) {
   const cmsOrigin = wpStoreOrigin()
-  if (!cmsOrigin) return new Response('WordPress checkout is not configured.', { status: 503 })
+  if (!cmsOrigin) return checkoutUnavailableResponse(request, true)
 
   const incomingUrl = new URL(request.url)
   const action = incomingUrl.searchParams.get('wc-ajax')
@@ -430,7 +490,12 @@ export async function proxyWcAjaxRequest(request: Request) {
     init.body = await request.arrayBuffer()
   }
 
-  const upstream = await fetch(target, init)
+  let upstream: Response
+  try {
+    upstream = await fetchWooUpstream(target, init)
+  } catch {
+    return checkoutUnavailableResponse(request, true)
+  }
   const responseHeaders = copyResponseHeaders(upstream.headers)
   for (const cookie of setCookiesFrom(upstream)) {
     const normalized = frontendSetCookie(cookie)
@@ -463,7 +528,7 @@ export async function createWooSessionHandoff(request: Request, authToken: strin
   const cmsOrigin = wpStoreOrigin()
   if (!cmsOrigin) throw new Error('WordPress checkout is not configured.')
 
-  const response = await fetch(`${cmsOrigin}/wp-json/alifleet/v1/session`, {
+  const response = await fetchWooUpstream(`${cmsOrigin}/wp-json/alifleet/v1/session`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${authToken}`,

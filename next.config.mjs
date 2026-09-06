@@ -41,6 +41,12 @@ try {
 
 /** @type {import('next').NextConfig} */
 
+const privateNoStoreHeaders = [
+  { key: 'Cache-Control', value: 'private, no-store, max-age=0, must-revalidate' },
+  { key: 'Pragma', value: 'no-cache' },
+  { key: 'Expires', value: '0' },
+]
+
 const nextConfig = {
   // WooCommerce canonicalizes checkout with a trailing slash while the
   // Next.js proxy route accepts both forms. Let the route handle that
@@ -155,6 +161,10 @@ const nextConfig = {
           },
         ],
       },
+      { source: '/checkout/:path*', headers: privateNoStoreHeaders },
+      { source: '/wc-ajax', headers: privateNoStoreHeaders },
+      { source: '/account/:path*', headers: privateNoStoreHeaders },
+      { source: '/my-account', headers: privateNoStoreHeaders },
     ]
   },
 }

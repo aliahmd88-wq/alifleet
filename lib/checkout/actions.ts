@@ -7,6 +7,7 @@ import { isLocale, type Locale } from '@/lib/i18n/config'
 import { isWpConfigured, wpStoreOrigin } from '@/lib/wp/config'
 import {
   createWooSessionHandoff,
+  fetchWooUpstream,
   frontendOrigin,
   mergeCookies,
   localeForRequest,
@@ -111,7 +112,7 @@ export async function prepareCheckoutAction(formData: FormData) {
 
   let cartResponse: Response
   try {
-    cartResponse = await fetch(
+    cartResponse = await fetchWooUpstream(
       `${cmsOrigin}/?alifleet-cart=${encodeURIComponent(items)}&alifleet-locale=${locale}`,
       {
         headers: {
@@ -122,7 +123,6 @@ export async function prepareCheckoutAction(formData: FormData) {
           'x-alifleet-locale': locale,
         },
         redirect: 'manual',
-        cache: 'no-store',
       }
     )
   } catch (error) {
