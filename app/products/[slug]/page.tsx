@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProductDetail } from '@/components/product-detail'
+import { absoluteUrl } from '@/lib/seo'
 import { getPart, getRelatedParts } from '@/lib/wp/catalog'
 
 /**
@@ -23,9 +24,19 @@ export async function generateMetadata({
   // English falls back to the Hebrew original for products that are not
   // translated yet, which is still far better metadata than a bare site name.
   const title = part.name.en || part.name.he
+  const description = part.description.en || part.description.he || undefined
+
   return {
     title: `${title} — ALI FLEET Spare Parts`,
-    description: part.description.en || part.description.he || undefined,
+    description,
+    alternates: { canonical: `/products/${slug}` },
+    openGraph: {
+      type: 'website',
+      title: `${title} — ALI FLEET Spare Parts`,
+      description,
+      url: absoluteUrl(`/products/${slug}`),
+      images: part.image ? [{ url: part.image, alt: title }] : undefined,
+    },
   }
 }
 
@@ -40,8 +51,35 @@ export default async function ProductPage({
 
   const related = await getRelatedParts(part)
 
+  // Product structured data. This is what lets Google show the price and
+  // availability directly in the result row instead of a plain blue link.
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: part.name.en || part.name.he,
+    description: part.description.en || part.description.he || undefined,
+    sku: part.sku || undefined,
+    brand: part.brand ? { '@type': 'Brand', name: part.brand } : undefined,
+    image: part.image ? [part.image] : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: absoluteUrl(`/products/${slug}`),
+      priceCurrency: 'ILS',
+      price: part.price,
+      availability: part.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'ALI FLEET' },
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // Values come from our own CMS, and JSON.stringify escapes the payload.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       <SiteHeader />
       <main>
         <ProductDetail part={part} related={related} />
