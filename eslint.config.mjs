@@ -11,6 +11,7 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/static-components': 'off',
       'react/jsx-no-comment-textnodes': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
   globalIgnores([
