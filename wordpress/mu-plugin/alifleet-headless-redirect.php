@@ -165,29 +165,64 @@ if ( 'cli' !== php_sapi_name() && ( ! defined( 'WP_CLI' ) || ! WP_CLI ) ) {
 }
 
 /**
+ * A proxy header is only a routing signal, so accept it on the two WooCommerce
+ * surfaces the Next.js server needs and only for a configured frontend origin.
+ */
+function alifleet_is_checkout_proxy_request( string $request_path ): bool {
+	if ( ! isset( $_SERVER['HTTP_X_ALIFLEET_FRONTEND_ORIGIN'] ) ) {
+		return false;
+	}
+
+	$origin = rtrim(
+		esc_url_raw( wp_unslash( (string) $_SERVER['HTTP_X_ALIFLEET_FRONTEND_ORIGIN'] ) ),
+		'/'
+	);
+	if ( '' === $origin ) {
+		return false;
+	}
+
+	$allowed_origins = defined( 'ALIFLEET_ALLOWED_ORIGINS' ) && is_array( ALIFLEET_ALLOWED_ORIGINS )
+		? ALIFLEET_ALLOWED_ORIGINS
+		: [ 'https://alifleet.com', 'https://www.alifleet.com' ];
+	$allowed_origins = array_map(
+		static fn ( $allowed_origin ): string => rtrim( (string) $allowed_origin, '/' ),
+		$allowed_origins
+	);
+	if ( ! in_array( $origin, $allowed_origins, true ) ) {
+		return false;
+	}
+
+	$path = '/' . ltrim( $request_path, '/' );
+	return in_array( rtrim( $path, '/' ), [ '/checkout', '/cart' ], true )
+		|| 0 === strpos( $path, '/checkout/' )
+		|| 0 === strpos( $path, '/cart/' );
+}
+
+/**
  * Redirect all public frontend views directly to WordPress Admin / Login.
  */
 add_action(
 	'template_redirect',
 	static function (): void {
-		// 1. Do not redirect admin, CLI, cron, or AJAX
+		// 1. Do not redirect admin, CLI, cron, or AJAX.
 		if ( is_admin() || wp_doing_cron() || wp_doing_ajax() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 			return;
 		}
 
-		// 2. Do not redirect REST API requests
+		// 2. Do not redirect REST API requests.
 		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 			return;
 		}
 
-		$uri = $_SERVER['REQUEST_URI'] ?? '';
+		$uri          = (string) ( $_SERVER['REQUEST_URI'] ?? '' );
+		$request_path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 
-		// 3. Do not redirect GraphQL queries (essential for Next.js frontend)
+		// 3. Do not redirect GraphQL queries (essential for Next.js frontend).
 		if ( false !== strpos( $uri, '/graphql' ) || isset( $_GET['graphql'] ) ) {
 			return;
 		}
 
-		// 4. Do not redirect REST API endpoints or WooCommerce webhooks/APIs
+		// 4. Do not redirect REST API endpoints or WooCommerce webhooks/APIs.
 		if (
 			false !== strpos( $uri, '/wp-json' ) ||
 			isset( $_GET['rest_route'] ) ||
@@ -198,12 +233,17 @@ add_action(
 			return;
 		}
 
-		// 5. Do not redirect login or registration
+		// 5. Allow the cart handoff and narrowly scoped Next.js proxy views.
+		if ( isset( $_GET['alifleet-cart'] ) || alifleet_is_checkout_proxy_request( $request_path ) ) {
+			return;
+		}
+
+		// 6. Do not redirect login or registration.
 		if ( false !== strpos( $uri, 'wp-login.php' ) || false !== strpos( $uri, 'wp-register.php' ) ) {
 			return;
 		}
 
-		// 6. Redirect all public frontend views directly to WordPress Admin
+		// 7. Redirect every other public frontend view to WordPress Admin.
 		if ( ! is_user_logged_in() ) {
 			wp_safe_redirect( wp_login_url( admin_url() ), 302 );
 		} else {

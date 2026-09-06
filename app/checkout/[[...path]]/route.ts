@@ -40,7 +40,12 @@ async function handler(request: Request, context: Context) {
 
       return new Response(null, {
         status: 303,
-        headers: { location: '/cart?checkout=expired' },
+        headers: {
+          location: '/cart?checkout=expired',
+          'cache-control': 'private, no-store, max-age=0, must-revalidate',
+          pragma: 'no-cache',
+          expires: '0',
+        },
       })
     }
   }

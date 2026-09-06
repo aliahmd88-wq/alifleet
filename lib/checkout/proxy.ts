@@ -10,6 +10,61 @@ import {
 } from './gate'
 
 const CMS_PATH_PREFIX = '/cms'
+const UPSTREAM_TIMEOUT_MS = 20_000
+const PRIVATE_NO_STORE = 'private, no-store, max-age=0, must-revalidate'
+
+function privateNoStoreHeaders(headers = new Headers()) {
+  headers.set('cache-control', PRIVATE_NO_STORE)
+  headers.set('pragma', 'no-cache')
+  headers.set('expires', '0')
+  headers.delete('etag')
+  headers.delete('last-modified')
+  return headers
+}
+
+function checkoutUnavailableResponse(request: Request, ajax = false) {
+  const responseHeaders = privateNoStoreHeaders()
+  if (ajax) {
+    responseHeaders.set('content-type', 'application/json; charset=utf-8')
+    return new Response(
+      JSON.stringify({
+        result: 'failure',
+        messages: 'Checkout is temporarily unavailable. Please try again.',
+      }),
+      { status: 503, headers: responseHeaders }
+    )
+  }
+
+  const method = request.method.toUpperCase()
+  if (method === 'GET' || method === 'HEAD') {
+    responseHeaders.set('location', '/cart?checkout=unavailable')
+    return new Response(null, { status: 303, headers: responseHeaders })
+  }
+
+  responseHeaders.set('content-type', 'text/plain; charset=utf-8')
+  return new Response('Checkout is temporarily unavailable. Please try again.', {
+    status: 503,
+    headers: responseHeaders,
+  })
+}
+
+export async function fetchWooUpstream(
+  input: Parameters<typeof fetch>[0],
+  init: RequestInit = {}
+) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, {
+      ...init,
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -182,10 +237,15 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
     return `${name}=${quote}${rewriteCmsUrl(value, request)}${quote}`
   })
 
+  // A backslash must end the URL match. WooCommerce localizes its checkout
+  // strings as JSON inside <script>, e.g. `href=\"https://a-f.site/my-account/\"`;
+  // swallowing that `\` into the URL removed the escape, turned the JSON into a
+  // SyntaxError and left `wc_checkout_params` undefined, which silently disabled
+  // every piece of checkout JavaScript (order review, shipping, AJAX submit).
   const cmsOrigin = wpStoreOrigin()
   const withCmsLinks = cmsOrigin
     ? rewritten.replace(
-        new RegExp(`${escapeRegExp(cmsOrigin)}([^\\s"'<>)]*)`, 'g'),
+        new RegExp(`${escapeRegExp(cmsOrigin)}([^\\s"'<>)\\\\]*)`, 'g'),
         (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`, request)
       )
     : rewritten
@@ -212,12 +272,12 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
 }
 
 function copyResponseHeaders(source: Headers) {
-  const headers = new Headers()
-  for (const name of ['content-type', 'cache-control', 'etag', 'last-modified', 'vary']) {
+  const responseHeaders = new Headers()
+  for (const name of ['content-type', 'vary']) {
     const value = source.get(name)
-    if (value) headers.set(name, value)
+    if (value) responseHeaders.set(name, value)
   }
-  return headers
+  return privateNoStoreHeaders(responseHeaders)
 }
 
 function setCookiesFrom(response: Response) {
@@ -267,9 +327,16 @@ function cookieHeader(existing: string, setCookies: string[]) {
  */
 const CART_RESET_SCRIPT = `<script>(function(){try{window.localStorage.removeItem('${CART_STORAGE_KEY}');document.cookie='${CART_QUANTITY_COOKIE}=0; Path=/; Max-Age=0; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'');}catch(e){}})();</script>`
 
+function isConfirmedOrderMarkup(html: string) {
+  return (
+    /class=("|')[^"']*\bwoocommerce-order-overview\b/i.test(html) &&
+    !/\bwoocommerce-thankyou-order-failed\b/i.test(html)
+  )
+}
+
 export async function proxyWooRequest(request: Request, path: string[]) {
   const cmsOrigin = wpStoreOrigin()
-  if (!cmsOrigin) return new Response('WordPress checkout is not configured.', { status: 503 })
+  if (!cmsOrigin) return checkoutUnavailableResponse(request)
 
   const incomingUrl = new URL(request.url)
   const joinedPath = `/${path.filter(Boolean).join('/')}`
@@ -313,7 +380,12 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     init.body = await request.arrayBuffer()
   }
 
-  const upstream = await fetch(target, init)
+  let upstream: Response
+  try {
+    upstream = await fetchWooUpstream(target, init)
+  } catch {
+    return checkoutUnavailableResponse(request)
+  }
   const upstreamCookies = setCookiesFrom(upstream)
   const responseHeaders = copyResponseHeaders(upstream.headers)
   for (const cookie of upstreamCookies) {
@@ -353,7 +425,14 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     // storefront cart lives in localStorage and this page is proxied HTML with
     // no React on it. Without this the customer paid and still came back to a
     // cart holding the items they had just bought.
-    if (isOrderReceivedPath(path)) body = body.replace('</body>', `${CART_RESET_SCRIPT}</body>`)
+    //
+    // Only a confirmed order may clear the basket. WooCommerce renders the
+    // "Thank you" template even for a forged /order-received/<id>/?key=... URL,
+    // so gate on the order overview list that exists solely when the order id
+    // and key were validated upstream, and never on a failed-payment notice.
+    if (isOrderReceivedPath(path) && upstream.ok && isConfirmedOrderMarkup(body)) {
+      body = body.replace('</body>', `${CART_RESET_SCRIPT}</body>`)
+    }
 
     return new Response(body, {
       status: upstream.status,
@@ -399,7 +478,7 @@ function rewriteJsonUrls(text: string, request: Request) {
  */
 export async function proxyWcAjaxRequest(request: Request) {
   const cmsOrigin = wpStoreOrigin()
-  if (!cmsOrigin) return new Response('WordPress checkout is not configured.', { status: 503 })
+  if (!cmsOrigin) return checkoutUnavailableResponse(request, true)
 
   const incomingUrl = new URL(request.url)
   const action = incomingUrl.searchParams.get('wc-ajax')
@@ -430,7 +509,12 @@ export async function proxyWcAjaxRequest(request: Request) {
     init.body = await request.arrayBuffer()
   }
 
-  const upstream = await fetch(target, init)
+  let upstream: Response
+  try {
+    upstream = await fetchWooUpstream(target, init)
+  } catch {
+    return checkoutUnavailableResponse(request, true)
+  }
   const responseHeaders = copyResponseHeaders(upstream.headers)
   for (const cookie of setCookiesFrom(upstream)) {
     const normalized = frontendSetCookie(cookie)
@@ -463,7 +547,7 @@ export async function createWooSessionHandoff(request: Request, authToken: strin
   const cmsOrigin = wpStoreOrigin()
   if (!cmsOrigin) throw new Error('WordPress checkout is not configured.')
 
-  const response = await fetch(`${cmsOrigin}/wp-json/alifleet/v1/session`, {
+  const response = await fetchWooUpstream(`${cmsOrigin}/wp-json/alifleet/v1/session`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${authToken}`,
