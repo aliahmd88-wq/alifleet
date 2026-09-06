@@ -45,27 +45,76 @@ function itemsQuery(formData: FormData) {
   }
 }
 
+function firstForwardedValue(value: string | null) {
+  return value?.split(',', 1)[0]?.trim() ?? ''
+}
+
+function isLocalDevelopmentHost(hostname: string) {
+  const normalized = hostname.toLowerCase()
+  return (
+    process.env.NODE_ENV === 'development' &&
+    (normalized === 'localhost' ||
+      normalized.endsWith('.localhost') ||
+      normalized === '127.0.0.1' ||
+      normalized === '[::1]' ||
+      normalized === '::1')
+  )
+}
+
+function parseCheckoutHost(value: string) {
+  try {
+    const parsed = new URL(`http://${value}`)
+    if (
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== '/' ||
+      parsed.search ||
+      parsed.hash
+    ) {
+      throw new Error('Invalid checkout host.')
+    }
+    return parsed
+  } catch {
+    throw new Error('Invalid checkout host.')
+  }
+}
+
+function checkoutActionProtocol(hostname: string, forwardedValue: string | null) {
+  const forwardedProtocol = firstForwardedValue(forwardedValue).toLowerCase()
+  if (forwardedProtocol === 'https') return 'https'
+  if (forwardedProtocol === 'http' && isLocalDevelopmentHost(hostname)) return 'http'
+  return isLocalDevelopmentHost(hostname) ? 'http' : 'https'
+}
+
+function secureCheckoutCookie(request: Request) {
+  const url = new URL(request.url)
+  return url.protocol === 'https:' || !isLocalDevelopmentHost(url.hostname)
+}
+
 /**
- * Rebuilds the browser's request so the proxy layer can derive the *public*
- * origin from it. The forwarded headers are copied through deliberately: behind
- * the production reverse proxy `host` is the internal listener, and WordPress
- * would render checkout with a `localhost` form action (QA-02).
+ * Rebuilds the browser request with a validated host and protocol so checkout
+ * can derive the public origin without letting forwarding headers downgrade
+ * production cookies to plain HTTP.
  */
 async function requestFromAction() {
   const requestHeaders = await headers()
-  const forwardedHost = requestHeaders.get('x-forwarded-host')?.split(',')[0]?.trim()
-  const host = forwardedHost || requestHeaders.get('host')?.trim()
-  if (!host) throw new Error('Missing checkout host.')
+  const rawHost =
+    firstForwardedValue(requestHeaders.get('x-forwarded-host')) ||
+    firstForwardedValue(requestHeaders.get('host'))
+  if (!rawHost) throw new Error('Missing checkout host.')
 
-  const forwardedProto = requestHeaders.get('x-forwarded-proto')?.split(',')[0]?.trim()
-  const protocol = forwardedProto || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+  const parsedHost = parseCheckoutHost(rawHost)
+  const protocol = checkoutActionProtocol(
+    parsedHost.hostname,
+    requestHeaders.get('x-forwarded-proto')
+  )
+  const proxied = new Headers({
+    host: parsedHost.host,
+    'x-forwarded-host': parsedHost.host,
+    'x-forwarded-proto': protocol,
+  })
 
-  const proxied = new Headers()
-  for (const name of ['host', 'x-forwarded-host', 'x-forwarded-proto']) {
-    const value = requestHeaders.get(name)
-    if (value) proxied.set(name, value)
-  }
-  return new Request(`${protocol}://${host}/checkout`, { headers: proxied })
+  return new Request(`${protocol}://${parsedHost.host}/checkout`, { headers: proxied })
 }
 
 export async function prepareCheckoutAction(formData: FormData) {
@@ -158,7 +207,7 @@ export async function prepareCheckoutAction(formData: FormData) {
   cookieStore.set(HANDOFF_QUANTITY_COOKIE, String(handedOffQuantity), {
     httpOnly: true,
     sameSite: 'lax',
-    secure: new URL(request.url).protocol === 'https:',
+    secure: secureCheckoutCookie(request),
     path: '/',
     maxAge: 2 * 60 * 60,
   })
@@ -226,7 +275,7 @@ function storeProxyCookie(
   cookieStore.set(name, storedValue, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: new URL(request.url).protocol === 'https:',
+    secure: secureCheckoutCookie(request),
     path: '/',
     maxAge: maxAgeRaw !== undefined ? Number(maxAgeRaw) : 2 * 24 * 60 * 60,
   })
