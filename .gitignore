@@ -1,19 +1,22 @@
-# v0 sandbox internal files
-__v0_runtime_loader.js
-__v0_devtools.tsx
-__v0_jsx-dev-runtime.ts
-.snowflake/
-.v0-trash/
-.vercel/
+# Dependencies
+node_modules
 
-# Environment variables — real env files never go to git (.env.example is fine)
+# Next.js build output (next-env.d.ts is regenerated on every build)
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Environment — real env files never go to git (.env.example is fine)
 .env
 .env.*
 !.env.example
 
-# Common ignores
-node_modules
-.next/
+# Tooling / OS
 .DS_Store
+*.log
 # project uses pnpm; an accidental npm install must not commit a second lockfile
 package-lock.json
+
+# automation scaffolding from earlier sessions
+.agents/

@@ -21,8 +21,14 @@ export function AccountMenu() {
   const wrapRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
 
-  // Close on route change so the menu never lingers over the new page.
-  useEffect(() => setOpen(false), [pathname])
+  // Close on route change so the menu never lingers over the new page. Done
+  // during render (React's "adjust state on prop change" pattern) rather than
+  // in an effect, so the stale open menu never paints for a frame.
+  const [openedOn, setOpenedOn] = useState(pathname)
+  if (openedOn !== pathname) {
+    setOpenedOn(pathname)
+    setOpen(false)
+  }
 
   // Dismiss on outside click and on Escape.
   useEffect(() => {

@@ -180,8 +180,8 @@ async function fetchAllPages<T>(
     after = connection.pageInfo.endCursor
   }
 
-  console.log(
-    `[v0] ${label}: stopped at the ${MAX_PAGES}-page guard with ${collected.length} items`
+  console.warn(
+    `[alifleet] ${label}: stopped at the ${MAX_PAGES}-page guard with ${collected.length} items`
   )
   return collected
 }
@@ -199,7 +199,7 @@ export async function getCatalog(): Promise<Catalog> {
   try {
     products = await fetchAllPages<WireProduct>(CATALOG_QUERY, 'catalog')
   } catch (error) {
-    console.log('[v0] Catalog fetch failed:', error)
+    console.warn('[alifleet] Catalog fetch failed:', error)
     return { parts: [], status: 'unreachable', hasUntranslated: false }
   }
 
@@ -215,8 +215,8 @@ export async function getCatalog(): Promise<Catalog> {
       if (row.sparePartFields) meta.set(row.databaseId, row.sparePartFields)
     }
   } catch (error) {
-    console.log(
-      '[v0] ACF product metadata unavailable — falling back to WooCommerce fields only:',
+    console.warn(
+      '[alifleet] ACF product metadata unavailable — falling back to WooCommerce fields only:',
       error instanceof Error ? error.message : error
     )
   }

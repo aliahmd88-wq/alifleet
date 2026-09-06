@@ -54,7 +54,7 @@ export async function loadAccount(orderLimit = 20): Promise<AccountData> {
   } catch (error) {
     const code = error instanceof WpError ? error.code : 'unknown'
     if (!(error instanceof WpError)) {
-      console.log('[v0] Unexpected error loading account:', error)
+      console.warn('[alifleet] Unexpected error loading account:', error)
     }
     return { state: 'error', code }
   }

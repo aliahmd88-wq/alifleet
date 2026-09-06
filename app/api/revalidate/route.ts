@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   // Defaulting to open would mean a missing env var quietly turns the cache
   // into a public purge button pointed at the WordPress box.
   if (!secret) {
-    console.log('[v0] revalidate: WORDPRESS_REVALIDATE_SECRET is not set')
+    console.warn('[alifleet] revalidate: WORDPRESS_REVALIDATE_SECRET is not set')
     return Response.json(
       { revalidated: false, error: 'revalidation is not configured' },
       { status: 503 }

@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { ShieldCheck, FileText, RefreshCcw, ArrowLeft, ArrowRight, Calendar, Printer } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { isLocale, localeMeta, type Locale } from '@/lib/i18n/config'
 import type { MultilingualPolicy, PolicyPageData } from '@/lib/wp/policies'
+
+/** A store that never changes: the snapshot differs only between server and client. */
+const subscribeNever = () => () => {}
 
 type PolicyType = 'privacy' | 'terms' | 'return'
 
@@ -93,16 +96,14 @@ export function PolicyScreen({
   initialLocale,
 }: PolicyScreenProps) {
   const { locale, setLocale, dir } = useLanguage()
-  const [mounted, setMounted] = useState(false)
+  // True after hydration only, with no setState-in-effect round trip.
+  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false)
   const syncedInitialLocaleRef = useRef<string | undefined>(undefined)
   const hasLocaleParamRef = useRef<boolean>(false)
   const prevLocaleRef = useRef<Locale | undefined>(undefined)
 
   useEffect(() => {
-    setMounted(true)
-    if (typeof window !== 'undefined') {
-      hasLocaleParamRef.current = new URL(window.location.href).searchParams.has('locale')
-    }
+    hasLocaleParamRef.current = new URL(window.location.href).searchParams.has('locale')
   }, [])
 
   useEffect(() => {
@@ -301,8 +302,7 @@ export function PolicyScreen({
                 [&_li]:leading-relaxed [&_li_strong]:text-foreground
                 [&_strong]:text-foreground [&_strong]:font-semibold
                 [&_a]:text-accent [&_a]:underline [&_a]:hover:text-accent/80"
-              // Content is server-fetched from our authenticated WordPress CMS
-              // eslint-disable-next-line react/no-danger
+              // Sanitised server-side in lib/wp/sanitize.ts before it reaches here.
               dangerouslySetInnerHTML={{ __html: activeDoc.content }}
             />
           ) : (

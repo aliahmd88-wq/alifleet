@@ -60,6 +60,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // would otherwise be thrown away by the stored snapshot, which is why an
     // item added straight from the catalogue sometimes never appeared in the
     // cart (QA-06).
+    // Deliberate: the stored basket can only be read after hydration, and the
+    // merge below is what keeps a click that raced this effect (QA-06).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLines((pending) => {
       if (pending.length === 0) return stored
       const merged = [...stored]

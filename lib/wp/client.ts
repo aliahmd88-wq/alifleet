@@ -60,7 +60,7 @@ export async function wpFetch<T>(
       signal: AbortSignal.timeout(15_000),
     })
   } catch (error) {
-    console.log('[v0] WordPress request failed to reach the endpoint:', error)
+    console.warn('[alifleet] WordPress request failed to reach the endpoint:', error)
     throw new WpError('network', [
       error instanceof Error ? error.message : 'fetch failed',
     ])
@@ -73,8 +73,8 @@ export async function wpFetch<T>(
   try {
     payload = JSON.parse(raw) as GraphQLResponse<T>
   } catch {
-    console.log(
-      '[v0] WordPress returned a non-JSON response:',
+    console.warn(
+      '[alifleet] WordPress returned a non-JSON response:',
       response.status,
       raw.slice(0, 200)
     )
@@ -88,7 +88,7 @@ export async function wpFetch<T>(
     const codes = payload.errors
       .map((e) => e.extensions?.code ?? '')
       .filter(Boolean)
-    console.log('[v0] WordPress GraphQL errors:', messages)
+    console.warn('[alifleet] WordPress GraphQL errors:', messages)
     throw new WpError(classifyWpErrors([...messages, ...codes]), messages)
   }
 

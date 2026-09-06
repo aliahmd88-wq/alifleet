@@ -2116,10 +2116,18 @@ add_filter(
  * the Next.js server is unaffected because it only ever calls /graphql and
  * /alifleet/v1/*.
  * ---------------------------------------------------------------------- */
+/**
+ * True for callers that must keep the full REST surface: logged-in users and
+ * WP-CLI, which reads the route index to register `wp wc …` commands.
+ */
+function alifleet_rest_is_trusted_caller(): bool {
+	return is_user_logged_in() || ( defined( 'WP_CLI' ) && WP_CLI );
+}
+
 add_filter(
 	'rest_endpoints',
 	static function ( array $endpoints ): array {
-		if ( is_user_logged_in() ) {
+		if ( alifleet_rest_is_trusted_caller() ) {
 			return $endpoints;
 		}
 		foreach ( array_keys( $endpoints ) as $route ) {
@@ -2134,7 +2142,7 @@ add_filter(
 add_filter(
 	'rest_index',
 	static function ( WP_REST_Response $response ): WP_REST_Response {
-		if ( is_user_logged_in() ) {
+		if ( alifleet_rest_is_trusted_caller() ) {
 			return $response;
 		}
 		$data = $response->get_data();

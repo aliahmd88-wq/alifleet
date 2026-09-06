@@ -192,7 +192,7 @@ export async function getPosts(): Promise<PostList> {
       after = connection.pageInfo.endCursor
     }
   } catch (error) {
-    console.log('[v0] Blog posts fetch failed:', error instanceof Error ? error.message : error)
+    console.warn('[alifleet] Blog posts fetch failed:', error instanceof Error ? error.message : error)
     return { posts: [], featured: null, status: 'unreachable' }
   }
 
@@ -222,7 +222,7 @@ export async function getPost(slug: string): Promise<(BlogPost & { content: stri
     if (!node) return null
     return mapPost(node, true) as (BlogPost & { content: string }) | null
   } catch (error) {
-    console.log('[v0] Blog post fetch failed:', error instanceof Error ? error.message : error)
+    console.warn('[alifleet] Blog post fetch failed:', error instanceof Error ? error.message : error)
     return null
   }
 }

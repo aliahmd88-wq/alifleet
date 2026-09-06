@@ -56,7 +56,7 @@ export function SaleBrowser({ cars, status, copy }: Props) {
       : 'rounded-full bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border transition-colors hover:bg-secondary hover:text-foreground'
 
   /* ---------- section shell, shared by every branch ---------- */
-  const Shell = ({ children }: { children: React.ReactNode }) => (
+  const renderShell = (children: React.ReactNode) => (
     <section id="for-sale" className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">
         {resolveCopy(copy?.eyebrow, locale, t.cars.saleEyebrow)}
@@ -73,7 +73,8 @@ export function SaleBrowser({ cars, status, copy }: Props) {
 
   if (status === 'not_configured' || status === 'unreachable') {
     return (
-      <Shell>
+      renderShell(
+        <>
         <div className="mt-10 rounded-3xl bg-card p-12 text-center ring-1 ring-border">
           <p className="font-semibold text-foreground">{t.cars.saleUnavailable}</p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -86,26 +87,30 @@ export function SaleBrowser({ cars, status, copy }: Props) {
             {t.common.callUs}
           </Link>
         </div>
-      </Shell>
+      </>
+      )
     )
   }
 
   if (status === 'acf_missing') {
     return (
-      <Shell>
+      renderShell(
+        <>
         <div className="mt-10 rounded-3xl border border-destructive/30 bg-destructive/5 p-12 text-center">
           <p className="font-semibold text-foreground">{t.cars.saleAcfMissing}</p>
           <p className="mt-2 text-sm text-muted-foreground">
             {t.cars.saleAcfMissingLead}
           </p>
         </div>
-      </Shell>
+      </>
+      )
     )
   }
 
   if (status === 'empty') {
     return (
-      <Shell>
+      renderShell(
+        <>
         <div className="mt-10 rounded-3xl bg-card p-12 text-center ring-1 ring-border">
           <p className="font-semibold text-foreground">{t.cars.saleEmpty}</p>
           <p className="mt-2 text-sm text-muted-foreground">{t.cars.saleEmptyLead}</p>
@@ -116,13 +121,15 @@ export function SaleBrowser({ cars, status, copy }: Props) {
             {t.common.callUs}
           </Link>
         </div>
-      </Shell>
+      </>
+      )
     )
   }
 
   /* ---------- normal grid ---------- */
   return (
-    <Shell>
+    renderShell(
+        <>
       <div className="mt-10 flex flex-col gap-5 border-y border-border py-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="me-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -221,6 +228,7 @@ export function SaleBrowser({ cars, status, copy }: Props) {
           )}
         </>
       )}
-    </Shell>
+    </>
+      )
   )
 }

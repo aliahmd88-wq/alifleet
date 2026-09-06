@@ -1,43 +1,6 @@
-import dns from 'node:dns'
+import { installDnsFallback } from './lib/server/dns-fallback.mjs'
 
-try {
-  dns.setDefaultResultOrder('ipv4first')
-  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4'])
-
-  const { Resolver } = dns
-  const fallbackResolver = new Resolver()
-  fallbackResolver.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4'])
-
-  const origLookup = dns.lookup
-  dns.lookup = function (hostname, options, callback) {
-    let cb = callback
-    let opts = options
-    if (typeof opts === 'function') {
-      cb = opts
-      opts = {}
-    } else if (typeof opts === 'number') {
-      opts = { family: opts }
-    } else if (!opts) {
-      opts = {}
-    }
-
-    origLookup.call(dns, hostname, opts, (err, address, family) => {
-      if (err) {
-        fallbackResolver.resolve4(hostname, (rErr, addresses) => {
-          if (rErr || !addresses || addresses.length === 0) {
-            return cb(err)
-          }
-          if (opts.all) {
-            return cb(null, addresses.map((addr) => ({ address: addr, family: 4 })))
-          }
-          return cb(null, addresses[0], 4)
-        })
-      } else {
-        return cb(null, address, family)
-      }
-    })
-  }
-} catch {}
+installDnsFallback()
 
 /** @type {import('next').NextConfig} */
 
@@ -89,9 +52,13 @@ const nextConfig = {
   // Next.js proxy route accepts both forms. Let the route handle that
   // canonicalization instead of creating a redirect loop.
   skipTrailingSlashRedirect: true,
+  // Type errors fail the build. `pnpm exec tsc --noEmit` is clean and stays
+  // that way; silently shipping broken types is how regressions hide.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
+  // Do not advertise the framework in every response.
+  poweredByHeader: false,
   images: {
     // Optimization is ON: WordPress images arrive through the same-origin
     // proxy and are resized and served as AVIF/WebP instead of raw originals.
@@ -110,13 +77,19 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'a-f.site' },
       { protocol: 'http', hostname: 'a-f.site' },
-      { protocol: 'https', hostname: '*.sslip.io' },
-      { protocol: 'http', hostname: '*.sslip.io' },
     ],
     minimumCacheTTL: 604800,
   },
   async redirects() {
     return [
+      // One canonical host. www is served by the same deployment, so without
+      // this every page exists twice for search engines.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.alifleet.com' }],
+        destination: 'https://alifleet.com/:path*',
+        permanent: true,
+      },
       // /import was the vehicle page until the section was split into "for
       // sale" and "import" under /cars. Preserve indexed and shared URLs.
       { source: '/import', destination: '/cars', permanent: true },

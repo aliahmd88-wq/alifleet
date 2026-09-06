@@ -16,14 +16,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 export function SiteLoader() {
   const [done, setDone] = useState(false)
   const [gone, setGone] = useState(false)
-  const startRef = useRef(Date.now())
+  const startRef = useRef<number | null>(null)
 
   useEffect(() => {
+    // Stamped here rather than in render so the component stays pure.
+    startRef.current ??= Date.now()
     let hideTimer: number
     const finish = () => {
       // Keep it on screen just long enough to read as intentional rather than
       // as a flash of a spinner.
-      const elapsed = Date.now() - startRef.current
+      const elapsed = Date.now() - (startRef.current ?? Date.now())
       hideTimer = window.setTimeout(() => setDone(true), Math.max(0, 650 - elapsed))
     }
 

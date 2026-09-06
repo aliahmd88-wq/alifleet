@@ -29,7 +29,7 @@ const fail = (
 
 const codeOf = (error: unknown): AuthErrorCode => {
   if (error instanceof WpError) return error.code
-  console.log('[v0] Unexpected auth error:', error)
+  console.warn('[alifleet] Unexpected auth error:', error)
   return 'unknown'
 }
 
@@ -150,8 +150,8 @@ export async function registerAction(
       signedIn = true
     }
   } catch (error) {
-    console.log(
-      '[v0] Account created but auto-login is unavailable:',
+    console.warn(
+      '[alifleet] Account created but auto-login is unavailable:',
       codeOf(error)
     )
   }

@@ -52,6 +52,8 @@ export function LanguageProvider({
         window.location.pathname
       )
     if (isLocale(requested)) {
+      // Deliberate: the URL and localStorage are only readable after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocaleState(requested)
       window.localStorage.setItem(LOCALE_STORAGE_KEY, requested)
       document.cookie = `${LOCALE_STORAGE_KEY}=${requested}; path=/; max-age=31536000; samesite=lax`

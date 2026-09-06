@@ -68,8 +68,8 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       { revalidate: CATALOG_REVALIDATE }
     )
   } catch (error) {
-    console.log(
-      '[v0] storeSettings unavailable — using fallback contact details:',
+    console.warn(
+      '[alifleet] storeSettings unavailable — using fallback contact details:',
       error instanceof Error ? error.message : error
     )
     return fallbackSettings

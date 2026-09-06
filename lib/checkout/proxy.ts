@@ -232,7 +232,7 @@ function mapCmsPath(pathname: string) {
   return `${CMS_PATH_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
 }
 
-export function rewriteCmsUrl(value: string, request: Request): string {
+export function rewriteCmsUrl(value: string): string {
   const trimmed = value.trim()
   if (!trimmed || trimmed.startsWith('#')) return value
   if (/^(data:|mailto:|tel:|javascript:|blob:)/i.test(trimmed)) return value
@@ -294,7 +294,7 @@ function stripFrontendOrigins(html: string, origin: string) {
 function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
   const attributePattern = /\b(href|src|action|formaction|poster)=("|')(.*?)\2/gi
   const rewritten = html.replace(attributePattern, (_match, name: string, quote: string, value: string) => {
-    return `${name}=${quote}${rewriteCmsUrl(value, request)}${quote}`
+    return `${name}=${quote}${rewriteCmsUrl(value)}${quote}`
   })
 
   // A backslash must end the URL match. WooCommerce localizes its checkout
@@ -306,7 +306,7 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
   const withCmsLinks = cmsOrigin
     ? rewritten.replace(
         new RegExp(`${escapeRegExp(cmsOrigin)}([^\\s"'<>)\\\\]*)`, 'g'),
-        (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`, request)
+        (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`)
       )
     : rewritten
 
@@ -462,7 +462,7 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     // redirect through the proxy creates an avoidable /cms/wp-admin loop.
     // Keep this fallback scoped to checkout requests so genuine CMS/admin
     // redirects elsewhere are not changed.
-    let rewrittenLocation = rewriteCmsUrl(location, request)
+    let rewrittenLocation = rewriteCmsUrl(location)
     if (isCheckoutPath) {
       try {
         const locationUrl = new URL(location, cmsOrigin)
@@ -514,20 +514,20 @@ export async function proxyWooRequest(request: Request, path: string[]) {
  * the checkout AJAX response, so without this the browser is redirected onto
  * the WordPress origin the moment an order succeeds.
  */
-function rewriteJsonUrls(text: string, request: Request) {
+function rewriteJsonUrls(text: string) {
   const cmsOrigin = wpStoreOrigin()
   if (!cmsOrigin) return text
 
   const plain = text.replace(
     new RegExp(`${escapeRegExp(cmsOrigin)}([^"'\\s\\\\]*)`, 'g'),
-    (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`, request)
+    (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`)
   )
 
   const escapedOrigin = cmsOrigin.replace(/\//g, '\\/')
   return plain.replace(
     new RegExp(`${escapeRegExp(escapedOrigin)}((?:\\\\/|[^"'\\s\\\\])*)`, 'g'),
     (_match, suffix: string) => {
-      const rewritten = rewriteCmsUrl(`${cmsOrigin}${suffix.replace(/\\\//g, '/')}`, request)
+      const rewritten = rewriteCmsUrl(`${cmsOrigin}${suffix.replace(/\\\//g, '/')}`)
       return rewritten.replace(/\//g, '\\/')
     }
   )
@@ -587,7 +587,7 @@ export async function proxyWcAjaxRequest(request: Request) {
 
   const location = upstream.headers.get('location')
   if (location && upstream.status >= 300 && upstream.status < 400) {
-    responseHeaders.set('location', rewriteCmsUrl(location, request))
+    responseHeaders.set('location', rewriteCmsUrl(location))
     return new Response(null, { status: upstream.status, headers: responseHeaders })
   }
 
@@ -596,7 +596,7 @@ export async function proxyWcAjaxRequest(request: Request) {
     const body = await upstream.text()
     responseHeaders.delete('content-length')
     const rewritten = rewriteAjaxEndpoints(
-      stripFrontendOrigins(rewriteJsonUrls(body, request), frontendOrigin(request))
+      stripFrontendOrigins(rewriteJsonUrls(body), frontendOrigin(request))
     )
     return new Response(rewritten, { status: upstream.status, headers: responseHeaders })
   }

@@ -143,13 +143,13 @@ export async function getSaleCars(): Promise<SaleInventory> {
     // A schema error is a setup problem, not an outage, and the fix is
     // completely different — so it gets its own status.
     if (/saleCarFields|saleCars|Cannot query field/i.test(message)) {
-      console.log(
-        '[v0] Sale inventory needs WPGraphQL for ACF — saleCarFields is not in the schema:',
+      console.warn(
+        '[alifleet] Sale inventory needs WPGraphQL for ACF — saleCarFields is not in the schema:',
         message
       )
       return { cars: [], status: 'acf_missing' }
     }
-    console.log('[v0] Sale inventory fetch failed:', message)
+    console.warn('[alifleet] Sale inventory fetch failed:', message)
     return { cars: [], status: 'unreachable' }
   }
 
