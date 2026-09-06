@@ -1324,6 +1324,43 @@ body.woocommerce-page #order_review_heading {
 	20
 );
 
+/**
+ * Refuse forged order confirmations.
+ *
+ * WooCommerce renders the "Thank you, your order has been received" template
+ * for /checkout/order-received/<id>/?key=<anything>, only omitting the order
+ * details when the id or key do not match. Through the headless proxy that read
+ * as a successful purchase and emptied the customer's basket. Reject the page
+ * outright unless the key belongs to that exact order.
+ */
+add_action(
+	'template_redirect',
+	static function (): void {
+		if ( ! function_exists( 'is_wc_endpoint_url' ) || ! is_wc_endpoint_url( 'order-received' ) ) {
+			return;
+		}
+
+		global $wp, $wp_query;
+
+		$order_id = absint( $wp->query_vars['order-received'] ?? 0 );
+		$key      = isset( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : '';
+		$order    = $order_id > 0 ? wc_get_order( $order_id ) : false;
+
+		if ( $order && '' !== $key && hash_equals( (string) $order->get_order_key(), (string) $key ) ) {
+			return;
+		}
+
+		// Core's redirect_canonical() would otherwise "guess" /checkout/ from this
+		// 404 and 301 there, turning a rejected link into a silent bounce.
+		add_filter( 'do_redirect_guess_404_permalink', '__return_false' );
+
+		$wp_query->set_404();
+		status_header( 404 );
+		nocache_headers();
+	},
+	5
+);
+
 add_action(
 	'template_redirect',
 	static function (): void {

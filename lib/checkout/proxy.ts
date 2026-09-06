@@ -237,10 +237,15 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
     return `${name}=${quote}${rewriteCmsUrl(value, request)}${quote}`
   })
 
+  // A backslash must end the URL match. WooCommerce localizes its checkout
+  // strings as JSON inside <script>, e.g. `href=\"https://a-f.site/my-account/\"`;
+  // swallowing that `\` into the URL removed the escape, turned the JSON into a
+  // SyntaxError and left `wc_checkout_params` undefined, which silently disabled
+  // every piece of checkout JavaScript (order review, shipping, AJAX submit).
   const cmsOrigin = wpStoreOrigin()
   const withCmsLinks = cmsOrigin
     ? rewritten.replace(
-        new RegExp(`${escapeRegExp(cmsOrigin)}([^\\s"'<>)]*)`, 'g'),
+        new RegExp(`${escapeRegExp(cmsOrigin)}([^\\s"'<>)\\\\]*)`, 'g'),
         (_match, suffix: string) => rewriteCmsUrl(`${cmsOrigin}${suffix}`, request)
       )
     : rewritten
@@ -321,6 +326,13 @@ function cookieHeader(existing: string, setCookies: string[]) {
  * the Next.js bundle — including the cart provider — is loaded there.
  */
 const CART_RESET_SCRIPT = `<script>(function(){try{window.localStorage.removeItem('${CART_STORAGE_KEY}');document.cookie='${CART_QUANTITY_COOKIE}=0; Path=/; Max-Age=0; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'');}catch(e){}})();</script>`
+
+function isConfirmedOrderMarkup(html: string) {
+  return (
+    /class=("|')[^"']*\bwoocommerce-order-overview\b/i.test(html) &&
+    !/\bwoocommerce-thankyou-order-failed\b/i.test(html)
+  )
+}
 
 export async function proxyWooRequest(request: Request, path: string[]) {
   const cmsOrigin = wpStoreOrigin()
@@ -413,7 +425,14 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     // storefront cart lives in localStorage and this page is proxied HTML with
     // no React on it. Without this the customer paid and still came back to a
     // cart holding the items they had just bought.
-    if (isOrderReceivedPath(path)) body = body.replace('</body>', `${CART_RESET_SCRIPT}</body>`)
+    //
+    // Only a confirmed order may clear the basket. WooCommerce renders the
+    // "Thank you" template even for a forged /order-received/<id>/?key=... URL,
+    // so gate on the order overview list that exists solely when the order id
+    // and key were validated upstream, and never on a failed-payment notice.
+    if (isOrderReceivedPath(path) && upstream.ok && isConfirmedOrderMarkup(body)) {
+      body = body.replace('</body>', `${CART_RESET_SCRIPT}</body>`)
+    }
 
     return new Response(body, {
       status: upstream.status,
