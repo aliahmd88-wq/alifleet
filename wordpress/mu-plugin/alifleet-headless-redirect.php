@@ -233,7 +233,7 @@ add_action(
 			return;
 		}
 
-		// 5. Allow the signed cart handoff and narrowly scoped Next.js proxy views.
+		// 5. Allow the cart handoff and narrowly scoped Next.js proxy views.
 		if ( isset( $_GET['alifleet-cart'] ) || alifleet_is_checkout_proxy_request( $request_path ) ) {
 			return;
 		}

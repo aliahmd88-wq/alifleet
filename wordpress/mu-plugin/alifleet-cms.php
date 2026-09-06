@@ -1487,7 +1487,9 @@ function alifleet_maybe_ping_status_transition( string $new_status, string $old_
 	if ( ! in_array( $post->post_type, $watched, true ) ) {
 		return;
 	}
-	if ( 'publish' !== $new_status && 'publish' !== $old_status ) {
+	// save_post handles edits that finish published (including draft-to-publish).
+	// This hook only fills the gap when live content becomes unavailable.
+	if ( 'publish' !== $old_status || 'publish' === $new_status ) {
 		return;
 	}
 
