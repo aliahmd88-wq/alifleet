@@ -1,17 +1,32 @@
 import 'server-only'
 
 import { headers } from 'next/headers'
+import { BodyLimitExceededError, decodeUtf8, readBodyWithLimit } from '@/lib/http-limits'
 import { wpStoreOrigin } from '@/lib/wp/config'
 import { LOCALE_STORAGE_KEY, isLocale, type Locale } from '@/lib/i18n/config'
 import {
   CART_QUANTITY_COOKIE,
   CART_STORAGE_KEY,
   isOrderReceivedPath,
+  isWooStateCookie,
 } from './gate'
 
 const CMS_PATH_PREFIX = '/cms'
 const UPSTREAM_TIMEOUT_MS = 20_000
+const REQUEST_BODY_LIMIT_BYTES = 512 * 1024
+const UPSTREAM_TEXT_LIMIT_BYTES = 3 * 1024 * 1024
+const UPSTREAM_ASSET_LIMIT_BYTES = 12 * 1024 * 1024
 const PRIVATE_NO_STORE = 'private, no-store, max-age=0, must-revalidate'
+const PRODUCTION_ORIGIN = 'https://alifleet.com'
+const STATIC_ASSET_EXTENSION = /\.(?:avif|css|eot|gif|ico|jpe?g|js|mjs|otf|png|svg|ttf|webp|woff2?)$/i
+const UPLOAD_IMAGE_EXTENSION = /\.(?:avif|gif|jpe?g|png|webp)$/i
+const ALLOWED_WC_AJAX_ACTIONS = new Set([
+  'apply_coupon',
+  'checkout',
+  'get_refreshed_fragments',
+  'remove_coupon',
+  'update_order_review',
+])
 
 function privateNoStoreHeaders(headers = new Headers()) {
   headers.set('cache-control', PRIVATE_NO_STORE)
@@ -79,43 +94,132 @@ function localeFromRequest(request: Request): Locale {
   return isLocale(match?.[1]) ? match[1] : 'en'
 }
 
-/**
- * The origin the *browser* is on.
- *
- * `new URL(request.url).origin` cannot be trusted here: behind the production
- * reverse proxy Next.js reconstructs that URL from the internal listener, so it
- * resolves to `http://localhost:3000`. WordPress then renders the checkout form
- * with `action="http://localhost:3000/checkout/"` and submitting the order
- * leaves the site entirely (QA-02). The forwarded headers describe the public
- * request, so they win, and an explicit env override wins over everything.
- */
-const CONFIGURED_ORIGIN = (
-  process.env.SITE_ORIGIN ??
-  process.env.NEXT_PUBLIC_SITE_ORIGIN ??
-  ''
-)
-  .trim()
-  .replace(/\/+$/, '')
+function notFoundResponse() {
+  return new Response(null, {
+    status: 404,
+    headers: { 'cache-control': 'private, no-store, max-age=0' },
+  })
+}
 
-function isInternalHost(host: string) {
-  return /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?$/i.test(host)
+function requestTooLargeResponse(ajax = false) {
+  const responseHeaders = privateNoStoreHeaders()
+  responseHeaders.set('content-type', ajax ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8')
+  const body = ajax
+    ? JSON.stringify({ result: 'failure', messages: 'Request is too large.' })
+    : 'Request is too large.'
+  return new Response(body, { status: 413, headers: responseHeaders })
+}
+
+function upstreamTooLargeResponse(ajax = false) {
+  const responseHeaders = privateNoStoreHeaders()
+  responseHeaders.set('content-type', ajax ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8')
+  const body = ajax
+    ? JSON.stringify({ result: 'failure', messages: 'Checkout response was invalid.' })
+    : 'Upstream response was invalid.'
+  return new Response(body, { status: 502, headers: responseHeaders })
+}
+
+function isSafePath(path: string[]) {
+  return path.every((segment) => {
+    try {
+      const decoded = decodeURIComponent(segment)
+      return decoded !== '.' && decoded !== '..' && !decoded.includes('\\') && !decoded.includes('\0')
+    } catch {
+      return false
+    }
+  })
+}
+
+function isStaticAssetPath(pathname: string, path: string[]) {
+  if (!isSafePath(path)) return false
+  if (pathname.startsWith('/wp-content/uploads/')) {
+    return UPLOAD_IMAGE_EXTENSION.test(pathname)
+  }
+  const allowedRoot = pathname.startsWith('/wp-content/') || pathname.startsWith('/wp-includes/')
+  return allowedRoot && STATIC_ASSET_EXTENSION.test(pathname)
+}
+
+function isTrustedWriteOrigin(request: Request) {
+  const source = request.headers.get('origin') ?? request.headers.get('referer')
+  if (!source || source === 'null') return false
+  try {
+    return new URL(source).origin === frontendOrigin(request)
+  } catch {
+    return false
+  }
+}
+
+function isAllowedCheckoutCookie(name: string) {
+  return isWooStateCookie(name) || name === 'pll_language' || name === LOCALE_STORAGE_KEY
+}
+
+function filterCheckoutCookies(raw: string) {
+  return raw
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => {
+      const separator = part.indexOf('=')
+      return separator > 0 && isAllowedCheckoutCookie(part.slice(0, separator).trim())
+    })
+    .join('; ')
+}
+
+function isAllowedSetCookie(raw: string) {
+  const pair = raw.split(';', 1)[0]
+  const separator = pair.indexOf('=')
+  return separator > 0 && isAllowedCheckoutCookie(pair.slice(0, separator).trim())
+}
+
+/**
+ * The browser origin is derived only from explicit configuration, the actual
+ * request URL, or Vercel's deployment hostname. Forwarded host headers are not
+ * accepted because callers can supply them outside the trusted Vercel edge.
+ */
+const CONFIGURED_ORIGIN = normalizeOrigin(
+  process.env.SITE_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_ORIGIN ?? ''
+)
+
+function normalizeOrigin(value: string) {
+  try {
+    const url = new URL(value.trim())
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return ''
+    return url.origin
+  } catch {
+    return ''
+  }
+}
+
+function isTrustedStorefrontHost(hostname: string) {
+  const normalized = hostname.toLowerCase()
+  return (
+    normalized === 'alifleet.com' ||
+    normalized === 'www.alifleet.com' ||
+    normalized.endsWith('.vercel.app') ||
+    normalized === 'localhost' ||
+    normalized === '127.0.0.1' ||
+    normalized === '::1'
+  )
 }
 
 export function frontendOrigin(request: Request) {
   if (CONFIGURED_ORIGIN) return CONFIGURED_ORIGIN
 
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
-  const host = forwardedHost || request.headers.get('host')?.trim() || ''
-  if (host && !isInternalHost(host)) {
-    const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
-    return `${forwardedProto || 'https'}://${host}`
+  try {
+    const requestUrl = new URL(request.url)
+    if (isTrustedStorefrontHost(requestUrl.hostname)) return requestUrl.origin
+  } catch {
+    // Fall through to the platform hostname or the production origin.
   }
 
-  try {
-    return new URL(request.url).origin
-  } catch {
-    return ''
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL
+  if (vercelHost) {
+    const platformOrigin = normalizeOrigin(`https://${vercelHost}`)
+    if (platformOrigin && isTrustedStorefrontHost(new URL(platformOrigin).hostname)) {
+      return platformOrigin
+    }
   }
+
+  return PRODUCTION_ORIGIN
 }
 
 function mapCmsPath(pathname: string) {
@@ -172,7 +276,7 @@ function mapCmsPath(pathname: string) {
   return `${CMS_PATH_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
 }
 
-export function rewriteCmsUrl(value: string, request: Request): string {
+export function rewriteCmsUrl(value: string, _request: Request): string {
   const trimmed = value.trim()
   if (!trimmed || trimmed.startsWith('#')) return value
   if (/^(data:|mailto:|tel:|javascript:|blob:)/i.test(trimmed)) return value
@@ -271,12 +375,19 @@ function rewriteHtml(html: string, request: Request, isCheckoutPath = false) {
   return withoutWordPressChrome.replace(/<body\b[^>]*>/i, (bodyTag) => `${bodyTag}${returnControl}`)
 }
 
-function copyResponseHeaders(source: Headers) {
+function copyResponseHeaders(source: Headers, isStaticAsset = false) {
   const responseHeaders = new Headers()
   for (const name of ['content-type', 'vary']) {
     const value = source.get(name)
     if (value) responseHeaders.set(name, value)
   }
+
+  if (isStaticAsset) {
+    responseHeaders.set('cache-control', 'public, max-age=86400, stale-while-revalidate=604800')
+    responseHeaders.set('x-content-type-options', 'nosniff')
+    return responseHeaders
+  }
+
   return privateNoStoreHeaders(responseHeaders)
 }
 
@@ -340,23 +451,32 @@ export async function proxyWooRequest(request: Request, path: string[]) {
 
   const incomingUrl = new URL(request.url)
   const joinedPath = `/${path.filter(Boolean).join('/')}`
-  const isCheckoutPath = path[0] === 'checkout'
+  const isCheckoutPath = path[0] === 'checkout' && isSafePath(path)
+  const isStaticAsset = isStaticAssetPath(joinedPath, path)
+  const isAdminAjax = joinedPath === '/wp-admin/admin-ajax.php' && isSafePath(path)
+  const method = request.method.toUpperCase()
+
+  const allowedMethod =
+    (isCheckoutPath && ['GET', 'HEAD', 'POST'].includes(method)) ||
+    (isStaticAsset && ['GET', 'HEAD'].includes(method)) ||
+    (isAdminAjax && ['GET', 'HEAD', 'POST'].includes(method))
+  if (!allowedMethod) return notFoundResponse()
+  if (method === 'POST' && !isTrustedWriteOrigin(request)) return notFoundResponse()
+
   const locale = localeFromRequest(request)
   const targetPath = isCheckoutPath && !joinedPath.endsWith('/') ? `${joinedPath}/` : joinedPath
   const target = new URL(targetPath, cmsOrigin)
   target.search = incomingUrl.search
   if (isCheckoutPath) {
-    // Polylang understands `lang`; the storefront uses `locale`. Normalize the
-    // request so WooCommerce renders the same language as the Next.js site.
     target.searchParams.delete('locale')
     target.searchParams.set('lang', locale)
   }
 
   const requestHeaders = new Headers()
-  const incomingCookie = request.headers.get('cookie') ?? ''
-  const forwardedCookie = isCheckoutPath
+  const incomingCookie = filterCheckoutCookies(request.headers.get('cookie') ?? '')
+  const forwardedCookie = isCheckoutPath || isAdminAjax
     ? alignPolylangCookie(incomingCookie, locale)
-    : incomingCookie
+    : ''
   if (forwardedCookie) requestHeaders.set('cookie', forwardedCookie)
   requestHeaders.set('accept', request.headers.get('accept') ?? '*/*')
   requestHeaders.set(
@@ -367,17 +487,22 @@ export async function proxyWooRequest(request: Request, path: string[]) {
   requestHeaders.set('x-alifleet-locale', locale)
   requestHeaders.set('accept-encoding', 'identity')
 
-  const method = request.method.toUpperCase()
   const init: RequestInit = { method, headers: requestHeaders, redirect: 'manual' }
-  if (method !== 'GET' && method !== 'HEAD') {
-    // Without the original content type WordPress cannot parse the body, so a
-    // checkout submission arrives with every field empty and the order is
-    // rejected for reasons the customer cannot see (QA-03).
+  if (method === 'POST') {
     const contentType = request.headers.get('content-type')
     if (contentType) requestHeaders.set('content-type', contentType)
     const requestedWith = request.headers.get('x-requested-with')
     if (requestedWith) requestHeaders.set('x-requested-with', requestedWith)
-    init.body = await request.arrayBuffer()
+    try {
+      init.body = await readBodyWithLimit(
+        request.body,
+        request.headers.get('content-length'),
+        REQUEST_BODY_LIMIT_BYTES
+      )
+    } catch (error) {
+      if (error instanceof BodyLimitExceededError) return requestTooLargeResponse()
+      return checkoutUnavailableResponse(request)
+    }
   }
 
   let upstream: Response
@@ -386,20 +511,17 @@ export async function proxyWooRequest(request: Request, path: string[]) {
   } catch {
     return checkoutUnavailableResponse(request)
   }
-  const upstreamCookies = setCookiesFrom(upstream)
-  const responseHeaders = copyResponseHeaders(upstream.headers)
-  for (const cookie of upstreamCookies) {
-    const normalized = frontendSetCookie(cookie)
-    if (normalized) responseHeaders.append('set-cookie', normalized)
+  const responseHeaders = copyResponseHeaders(upstream.headers, isStaticAsset)
+  if (!isStaticAsset) {
+    for (const cookie of setCookiesFrom(upstream)) {
+      if (!isAllowedSetCookie(cookie)) continue
+      const normalized = frontendSetCookie(cookie)
+      if (normalized) responseHeaders.append('set-cookie', normalized)
+    }
   }
 
   const location = upstream.headers.get('location')
   if (location && upstream.status >= 300 && upstream.status < 400) {
-    // WooCommerce normally sends an empty checkout back to the cart. On this
-    // install WordPress currently emits /wp-admin/ instead; following that
-    // redirect through the proxy creates an avoidable /cms/wp-admin loop.
-    // Keep this fallback scoped to checkout requests so genuine CMS/admin
-    // redirects elsewhere are not changed.
     let rewrittenLocation = rewriteCmsUrl(location, request)
     if (isCheckoutPath) {
       try {
@@ -415,35 +537,35 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     return new Response(null, { status: upstream.status, headers: responseHeaders })
   }
 
-  const contentType = upstream.headers.get('content-type') ?? ''
-  if (contentType.includes('text/html')) {
-    const html = await upstream.text()
-    responseHeaders.delete('content-length')
-    let body = rewriteHtml(html, request, isCheckoutPath)
+  if (method === 'HEAD') {
+    return new Response(null, { status: upstream.status, headers: responseHeaders })
+  }
 
-    // WooCommerce empties its own basket once the order exists, but the
-    // storefront cart lives in localStorage and this page is proxied HTML with
-    // no React on it. Without this the customer paid and still came back to a
-    // cart holding the items they had just bought.
-    //
-    // Only a confirmed order may clear the basket. WooCommerce renders the
-    // "Thank you" template even for a forged /order-received/<id>/?key=... URL,
-    // so gate on the order overview list that exists solely when the order id
-    // and key were validated upstream, and never on a failed-payment notice.
+  const contentType = upstream.headers.get('content-type') ?? ''
+  let upstreamBody: Uint8Array
+  try {
+    upstreamBody = await readBodyWithLimit(
+      upstream.body,
+      upstream.headers.get('content-length'),
+      contentType.includes('text/html') ? UPSTREAM_TEXT_LIMIT_BYTES : UPSTREAM_ASSET_LIMIT_BYTES
+    )
+  } catch (error) {
+    if (error instanceof BodyLimitExceededError) return upstreamTooLargeResponse()
+    return checkoutUnavailableResponse(request)
+  }
+
+  responseHeaders.delete('content-length')
+  if (contentType.includes('text/html')) {
+    let body = rewriteHtml(decodeUtf8(upstreamBody), request, isCheckoutPath)
+
     if (isOrderReceivedPath(path) && upstream.ok && isConfirmedOrderMarkup(body)) {
       body = body.replace('</body>', `${CART_RESET_SCRIPT}</body>`)
     }
 
-    return new Response(body, {
-      status: upstream.status,
-      headers: responseHeaders,
-    })
+    return new Response(body, { status: upstream.status, headers: responseHeaders })
   }
 
-  return new Response(await upstream.arrayBuffer(), {
-    status: upstream.status,
-    headers: responseHeaders,
-  })
+  return new Response(upstreamBody, { status: upstream.status, headers: responseHeaders })
 }
 
 /**
@@ -481,8 +603,12 @@ export async function proxyWcAjaxRequest(request: Request) {
   if (!cmsOrigin) return checkoutUnavailableResponse(request, true)
 
   const incomingUrl = new URL(request.url)
-  const action = incomingUrl.searchParams.get('wc-ajax')
-  if (!action) return new Response('Missing wc-ajax action.', { status: 400 })
+  const action = incomingUrl.searchParams.get('wc-ajax') ?? ''
+  const method = request.method.toUpperCase()
+  if (!ALLOWED_WC_AJAX_ACTIONS.has(action) || !['GET', 'HEAD', 'POST'].includes(method)) {
+    return notFoundResponse()
+  }
+  if (method === 'POST' && !isTrustedWriteOrigin(request)) return notFoundResponse()
 
   const locale = localeFromRequest(request)
   const target = new URL('/', cmsOrigin)
@@ -492,7 +618,10 @@ export async function proxyWcAjaxRequest(request: Request) {
   target.searchParams.set('lang', locale)
 
   const requestHeaders = new Headers()
-  const incomingCookie = alignPolylangCookie(request.headers.get('cookie') ?? '', locale)
+  const incomingCookie = alignPolylangCookie(
+    filterCheckoutCookies(request.headers.get('cookie') ?? ''),
+    locale
+  )
   if (incomingCookie) requestHeaders.set('cookie', incomingCookie)
   requestHeaders.set('accept', request.headers.get('accept') ?? '*/*')
   requestHeaders.set('accept-language', `${locale},en;q=0.8`)
@@ -501,12 +630,20 @@ export async function proxyWcAjaxRequest(request: Request) {
   requestHeaders.set('x-alifleet-locale', locale)
   requestHeaders.set('accept-encoding', 'identity')
 
-  const method = request.method.toUpperCase()
   const init: RequestInit = { method, headers: requestHeaders, redirect: 'manual' }
-  if (method !== 'GET' && method !== 'HEAD') {
+  if (method === 'POST') {
     const contentType = request.headers.get('content-type')
     if (contentType) requestHeaders.set('content-type', contentType)
-    init.body = await request.arrayBuffer()
+    try {
+      init.body = await readBodyWithLimit(
+        request.body,
+        request.headers.get('content-length'),
+        REQUEST_BODY_LIMIT_BYTES
+      )
+    } catch (error) {
+      if (error instanceof BodyLimitExceededError) return requestTooLargeResponse(true)
+      return checkoutUnavailableResponse(request, true)
+    }
   }
 
   let upstream: Response
@@ -517,6 +654,7 @@ export async function proxyWcAjaxRequest(request: Request) {
   }
   const responseHeaders = copyResponseHeaders(upstream.headers)
   for (const cookie of setCookiesFrom(upstream)) {
+    if (!isAllowedSetCookie(cookie)) continue
     const normalized = frontendSetCookie(cookie)
     if (normalized) responseHeaders.append('set-cookie', normalized)
   }
@@ -527,20 +665,32 @@ export async function proxyWcAjaxRequest(request: Request) {
     return new Response(null, { status: upstream.status, headers: responseHeaders })
   }
 
+  if (method === 'HEAD') {
+    return new Response(null, { status: upstream.status, headers: responseHeaders })
+  }
+
+  let upstreamBody: Uint8Array
+  try {
+    upstreamBody = await readBodyWithLimit(
+      upstream.body,
+      upstream.headers.get('content-length'),
+      UPSTREAM_TEXT_LIMIT_BYTES
+    )
+  } catch (error) {
+    if (error instanceof BodyLimitExceededError) return upstreamTooLargeResponse(true)
+    return checkoutUnavailableResponse(request, true)
+  }
+
+  responseHeaders.delete('content-length')
   const contentType = upstream.headers.get('content-type') ?? ''
   if (/json|text\//i.test(contentType)) {
-    const body = await upstream.text()
-    responseHeaders.delete('content-length')
     const rewritten = rewriteAjaxEndpoints(
-      stripFrontendOrigins(rewriteJsonUrls(body, request), frontendOrigin(request))
+      stripFrontendOrigins(rewriteJsonUrls(decodeUtf8(upstreamBody), request), frontendOrigin(request))
     )
     return new Response(rewritten, { status: upstream.status, headers: responseHeaders })
   }
 
-  return new Response(await upstream.arrayBuffer(), {
-    status: upstream.status,
-    headers: responseHeaders,
-  })
+  return new Response(upstreamBody, { status: upstream.status, headers: responseHeaders })
 }
 
 export async function createWooSessionHandoff(request: Request, authToken: string, locale: Locale) {

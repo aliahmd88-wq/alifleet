@@ -1,7 +1,17 @@
 import 'server-only'
 
+import { BodyLimitExceededError, decodeUtf8, readBodyWithLimit } from '@/lib/http-limits'
 import { WP_CACHE_TAG, isWpConfigured, wpEndpoint } from './config'
 import { WpError, classifyWpErrors } from './errors'
+import type { WordPressSecurityHeaders } from './request-security'
+
+const MAX_GRAPHQL_REQUEST_BYTES = 256 * 1024
+const MAX_GRAPHQL_RESPONSE_BYTES = 3 * 1024 * 1024
+const SECURITY_HEADER_NAMES = new Set([
+  'x-alifleet-client-ip',
+  'x-alifleet-client-ip-timestamp',
+  'x-alifleet-client-ip-signature',
+])
 
 type GraphQLResponse<T> = {
   data?: T | null
@@ -21,7 +31,11 @@ type GraphQLResponse<T> = {
 export async function wpFetch<T>(
   query: string,
   variables: Record<string, unknown> = {},
-  options: { authToken?: string | null; revalidate?: number } = {}
+  options: {
+    authToken?: string | null
+    revalidate?: number
+    securityHeaders?: WordPressSecurityHeaders
+  } = {}
 ): Promise<T> {
   if (!isWpConfigured()) {
     throw new WpError('not_configured', ['WORDPRESS_GRAPHQL_ENDPOINT is not set'])
@@ -32,6 +46,14 @@ export async function wpFetch<T>(
   }
   if (options.authToken) {
     headers.Authorization = `Bearer ${options.authToken}`
+  }
+  for (const [name, value] of Object.entries(options.securityHeaders ?? {})) {
+    if (value && SECURITY_HEADER_NAMES.has(name)) headers[name] = value
+  }
+
+  const requestBody = JSON.stringify({ query, variables })
+  if (new TextEncoder().encode(requestBody).byteLength > MAX_GRAPHQL_REQUEST_BYTES) {
+    throw new WpError('unknown', ['GraphQL request exceeded the size limit'])
   }
 
   // Account data is per-user and must never be shared between visitors, so it
@@ -55,40 +77,56 @@ export async function wpFetch<T>(
     response = await fetch(wpEndpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ query, variables }),
+      body: requestBody,
       ...caching,
       signal: AbortSignal.timeout(15_000),
     })
   } catch (error) {
-    console.log('[v0] WordPress request failed to reach the endpoint:', error)
-    throw new WpError('network', [
-      error instanceof Error ? error.message : 'fetch failed',
-    ])
+    const errorName = error instanceof Error ? error.name : 'UnknownError'
+    console.error('[AliFleet] WordPress request failed.', { errorName })
+    throw new WpError('network', ['WordPress request failed'])
   }
 
-  // A WordPress that is up but misconfigured often replies with an HTML error
-  // page, which would blow up `response.json()` with a confusing parse error.
-  const raw = await response.text()
+  let raw: string
+  try {
+    raw = decodeUtf8(
+      await readBodyWithLimit(
+        response.body,
+        response.headers.get('content-length'),
+        MAX_GRAPHQL_RESPONSE_BYTES
+      )
+    )
+  } catch (error) {
+    if (error instanceof BodyLimitExceededError) {
+      console.error('[AliFleet] WordPress response exceeded the size limit.', {
+        status: response.status,
+      })
+    }
+    throw new WpError('network', ['WordPress returned an invalid response'])
+  }
+
   let payload: GraphQLResponse<T>
   try {
     payload = JSON.parse(raw) as GraphQLResponse<T>
   } catch {
-    console.log(
-      '[v0] WordPress returned a non-JSON response:',
-      response.status,
-      raw.slice(0, 200)
-    )
+    console.error('[AliFleet] WordPress returned a non-JSON response.', {
+      status: response.status,
+      contentType: response.headers.get('content-type') ?? 'unknown',
+    })
     throw new WpError('network', [
       `HTTP ${response.status} returned a non-JSON body`,
     ])
   }
 
   if (payload.errors?.length) {
-    const messages = payload.errors.map((e) => e.message)
+    const messages = payload.errors.map((error) => error.message)
     const codes = payload.errors
-      .map((e) => e.extensions?.code ?? '')
+      .map((error) => error.extensions?.code ?? '')
       .filter(Boolean)
-    console.log('[v0] WordPress GraphQL errors:', messages)
+    console.warn('[AliFleet] WordPress GraphQL request returned errors.', {
+      count: payload.errors.length,
+      codes,
+    })
     throw new WpError(classifyWpErrors([...messages, ...codes]), messages)
   }
 

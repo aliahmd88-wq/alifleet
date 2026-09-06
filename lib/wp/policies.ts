@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { CATALOG_REVALIDATE, WP_CACHE_TAG } from './config'
+import { sanitizeWordPressHtml } from './sanitize-html'
 import type { Locale } from '@/lib/i18n/config'
 
 export type PolicyType = 'privacy' | 'terms' | 'return'
@@ -241,7 +242,7 @@ const fallbackTerms: MultilingualPolicy = {
       <h2>الشروط والأحكام العامة — علي فليت</h2>
       <p>أهلاً بكم في علي فليت. تحدد هذه الشروط والأحكام القواعد واللوائح الخاصة باستخدام موقعنا الإلكتروني وخدماتنا المخصصة لشراء قطع الغيار واستيراد المركبات والشاحنات.</p>
       <h3>1. نطاق الخدمات</h3>
-      <p>توفر علي فليت خدمات توريد واستيراد المركبات التجارية وقطع الغيار الأصلية. جميع المعاملات تخضع للقوانين المعمول بها والاتفاقيات المبرمة مع العميل.</p>
+      <p>توفر علي فليت خدمات توريد واستيراد ا��مركبات التجارية وقطع الغيار الأصلية. جميع المعاملات تخضع للقوانين المعمول بها والاتفاقيات المبرمة مع العميل.</p>
       <h3>2. الأسعار والدفع</h3>
       <p>الأسعار المعروضة تشمل التفاصيل الموضحة في كل عرض. يتم تأكيد الطلبات فور إتمام الدفع أو استلام العربون المتفق عليه.</p>
     `,
@@ -359,7 +360,21 @@ export async function fetchLivePolicyGraphQL<T>(
     throw new Error('Policy GraphQL response contained no data')
   }
 
-  return payload.data as T
+  return sanitizePolicyPayload(payload.data) as T
+}
+
+function sanitizePolicyPayload(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizePolicyPayload)
+  if (!value || typeof value !== 'object') return value
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      key,
+      key === 'content' && typeof nestedValue === 'string'
+        ? sanitizeWordPressHtml(nestedValue)
+        : sanitizePolicyPayload(nestedValue),
+    ])
+  )
 }
 
 /**

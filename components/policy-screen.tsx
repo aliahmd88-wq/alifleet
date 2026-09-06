@@ -301,8 +301,7 @@ export function PolicyScreen({
                 [&_li]:leading-relaxed [&_li_strong]:text-foreground
                 [&_strong]:text-foreground [&_strong]:font-semibold
                 [&_a]:text-accent [&_a]:underline [&_a]:hover:text-accent/80"
-              // Content is server-fetched from our authenticated WordPress CMS
-              // eslint-disable-next-line react/no-danger
+              // WordPress content is sanitized at the server-side data boundary.
               dangerouslySetInnerHTML={{ __html: activeDoc.content }}
             />
           ) : (
