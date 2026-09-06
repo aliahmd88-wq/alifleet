@@ -2,6 +2,8 @@ import 'server-only'
 
 import { headers } from 'next/headers'
 import { wpStoreOrigin } from '@/lib/wp/config'
+import { siteUrl } from '@/lib/seo'
+import { isKnownPublicHost } from './public-host'
 import { LOCALE_STORAGE_KEY, isLocale, type Locale } from '@/lib/i18n/config'
 import {
   CART_QUANTITY_COOKIE,
@@ -13,6 +15,14 @@ const CMS_PATH_PREFIX = '/cms'
 const UPSTREAM_TIMEOUT_MS = 20_000
 const PRIVATE_NO_STORE = 'private, no-store, max-age=0, must-revalidate'
 
+/**
+ * Upper bound on a request body forwarded to WordPress. A checkout form is a
+ * few kilobytes; there is no legitimate reason for a visitor to push
+ * megabytes through this proxy, and without a cap each such request was held
+ * fully in memory for the whole upstream round trip (H4).
+ */
+const MAX_FORWARDED_BODY_BYTES = 1_000_000
+
 function privateNoStoreHeaders(headers = new Headers()) {
   headers.set('cache-control', PRIVATE_NO_STORE)
   headers.set('pragma', 'no-cache')
@@ -20,6 +30,47 @@ function privateNoStoreHeaders(headers = new Headers()) {
   headers.delete('etag')
   headers.delete('last-modified')
   return headers
+}
+
+function payloadTooLargeResponse() {
+  const responseHeaders = privateNoStoreHeaders()
+  responseHeaders.set('content-type', 'text/plain; charset=utf-8')
+  return new Response('Request body too large.', { status: 413, headers: responseHeaders })
+}
+
+/**
+ * Reads the request body up to the cap. Returns `null` once the cap is
+ * exceeded — the stream is cancelled at that point rather than drained.
+ */
+async function readBodyCapped(
+  request: Request,
+  limit = MAX_FORWARDED_BODY_BYTES
+): Promise<Uint8Array | null> {
+  const declared = Number(request.headers.get('content-length') ?? Number.NaN)
+  if (Number.isFinite(declared) && declared > limit) return null
+  if (!request.body) return new Uint8Array(0)
+
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > limit) {
+      await reader.cancel()
+      return null
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return merged
 }
 
 function checkoutUnavailableResponse(request: Request, ajax = false) {
@@ -87,7 +138,10 @@ function localeFromRequest(request: Request): Locale {
  * resolves to `http://localhost:3000`. WordPress then renders the checkout form
  * with `action="http://localhost:3000/checkout/"` and submitting the order
  * leaves the site entirely (QA-02). The forwarded headers describe the public
- * request, so they win, and an explicit env override wins over everything.
+ * request, so they win — but only when they name a host we actually serve:
+ * otherwise the header is attacker controlled and would be echoed into the
+ * checkout form and the session handoff (M3). An explicit env override wins
+ * over everything.
  */
 const CONFIGURED_ORIGIN = (
   process.env.SITE_ORIGIN ??
@@ -106,16 +160,22 @@ export function frontendOrigin(request: Request) {
 
   const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
   const host = forwardedHost || request.headers.get('host')?.trim() || ''
-  if (host && !isInternalHost(host)) {
+  if (host && !isInternalHost(host) && isKnownPublicHost(host, new URL(siteUrl()).host)) {
     const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
     return `${forwardedProto || 'https'}://${host}`
   }
 
   try {
-    return new URL(request.url).origin
+    const requestUrl = new URL(request.url)
+    // In development the listener *is* the public origin. In production it
+    // is the container's internal address (QA-02), so the canonical URL wins.
+    if (process.env.NODE_ENV !== 'production' || !isInternalHost(requestUrl.host)) {
+      return requestUrl.origin
+    }
   } catch {
-    return ''
+    /* fall through to the canonical origin */
   }
+  return siteUrl()
 }
 
 function mapCmsPath(pathname: string) {
@@ -377,7 +437,9 @@ export async function proxyWooRequest(request: Request, path: string[]) {
     if (contentType) requestHeaders.set('content-type', contentType)
     const requestedWith = request.headers.get('x-requested-with')
     if (requestedWith) requestHeaders.set('x-requested-with', requestedWith)
-    init.body = await request.arrayBuffer()
+    const body = await readBodyCapped(request)
+    if (body === null) return payloadTooLargeResponse()
+    init.body = body
   }
 
   let upstream: Response
@@ -506,7 +568,9 @@ export async function proxyWcAjaxRequest(request: Request) {
   if (method !== 'GET' && method !== 'HEAD') {
     const contentType = request.headers.get('content-type')
     if (contentType) requestHeaders.set('content-type', contentType)
-    init.body = await request.arrayBuffer()
+    const body = await readBodyCapped(request)
+    if (body === null) return payloadTooLargeResponse()
+    init.body = body
   }
 
   let upstream: Response

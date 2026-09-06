@@ -32,10 +32,10 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const provided =
-    request.headers.get('x-alifleet-revalidate-secret') ??
-    new URL(request.url).searchParams.get('secret') ??
-    ''
+  // Header only. WordPress (alifleet_ping_revalidate) already sends it this
+  // way; also accepting `?secret=` put the credential into proxy and access
+  // logs and browser history for no benefit (M5).
+  const provided = request.headers.get('x-alifleet-revalidate-secret') ?? ''
 
   if (!secretsMatch(provided, secret)) {
     // No detail in the body: a caller guessing the secret learns nothing about

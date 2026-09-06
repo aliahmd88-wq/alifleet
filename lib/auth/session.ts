@@ -43,7 +43,10 @@ async function sessionCookieOptions() {
 
   return {
     httpOnly: true,
-    secure,
+    // Production is only ever served over HTTPS (Traefik terminates TLS and
+    // HSTS is set), so the cookie is always Secure there whatever forwarding
+    // headers the proxy sends (M4). The sniffing above is for local dev only.
+    secure: process.env.NODE_ENV === 'production' || secure,
     sameSite: 'lax' as const,
     path: '/',
   }

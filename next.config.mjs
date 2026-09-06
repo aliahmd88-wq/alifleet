@@ -47,6 +47,43 @@ const privateNoStoreHeaders = [
   { key: 'Expires', value: '0' },
 ]
 
+/**
+ * Content-Security-Policy.
+ *
+ * `'unsafe-inline'` for scripts is unavoidable without a nonce middleware:
+ * Next.js ships its hydration payload inline and the Meta pixel is an inline
+ * snippet. The policy still pins script and connection targets to known
+ * hosts, forbids plugins, framing and <base> hijacking, and upgrades any
+ * stray http:// subresource — which is where the practical risk is (H1).
+ * `form-action` is deliberately absent: it would also apply to the redirect
+ * a payment gateway performs after the checkout POST.
+ */
+const wordpressOrigin = (() => {
+  const configured = (process.env.WORDPRESS_GRAPHQL_ENDPOINT ?? '').trim()
+  try {
+    if (configured && !configured.includes('sslip.io')) return new URL(configured).origin
+  } catch {}
+  return 'https://a-f.site'
+})()
+
+const isDevelopment = process.env.NODE_ENV === 'development'
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://va.vercel-scripts.com`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${wordpressOrigin} https://www.facebook.com https://*.gravatar.com`,
+  "font-src 'self' data:",
+  `connect-src 'self' ${wordpressOrigin} https://www.facebook.com https://vitals.vercel-insights.com https://va.vercel-scripts.com`,
+  'frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.facebook.com',
+  `media-src 'self' ${wordpressOrigin}`,
+  "worker-src 'self' blob:",
+  ...(isDevelopment ? [] : ['upgrade-insecure-requests']),
+].join('; ')
+
 const nextConfig = {
   // WooCommerce canonicalizes checkout with a trailing slash while the
   // Next.js proxy route accepts both forms. Let the route handle that
@@ -150,6 +187,8 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+          { key: 'X-Frame-Options', value: 'DENY' },
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
@@ -158,6 +197,17 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+      {
+        // Proxied media only: an SVG opened directly would otherwise run its
+        // scripts on this origin. Listed after the global rule so it wins.
+        source: '/api/img',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'none'; style-src 'unsafe-inline'; sandbox",
           },
         ],
       },

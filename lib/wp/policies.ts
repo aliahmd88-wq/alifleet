@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { CATALOG_REVALIDATE, WP_CACHE_TAG } from './config'
+import { sanitizeContentFields } from './sanitize'
 import type { Locale } from '@/lib/i18n/config'
 
 export type PolicyType = 'privacy' | 'terms' | 'return'
@@ -359,7 +360,9 @@ export async function fetchLivePolicyGraphQL<T>(
     throw new Error('Policy GraphQL response contained no data')
   }
 
-  return payload.data as T
+  // Policy bodies are rendered as raw HTML; strip anything executable at
+  // the boundary so every getter below is covered (H2).
+  return sanitizeContentFields(payload.data) as T
 }
 
 /**

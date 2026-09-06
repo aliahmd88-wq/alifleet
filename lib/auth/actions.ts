@@ -7,6 +7,7 @@ import { HANDOFF_QUANTITY_COOKIE, isWooStateCookie } from '@/lib/checkout/gate'
 import { wpFetch } from '@/lib/wp/client'
 import { WpError, type AuthErrorCode } from '@/lib/wp/errors'
 import { isWpConfigured } from '@/lib/wp/config'
+import { sanitizeRedirect } from './redirect'
 import {
   LOGIN,
   REGISTER_USER,
@@ -326,7 +327,3 @@ export async function updateAddressesAction(
 }
 
 /** Blocks open-redirects: only same-site paths are honoured. */
-function sanitizeRedirect(target: string) {
-  if (!target.startsWith('/') || target.startsWith('//')) return '/account'
-  return target
-}

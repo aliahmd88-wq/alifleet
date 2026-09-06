@@ -5,6 +5,7 @@ import { blogCategories } from '@/lib/data/blog'
 import { stripHtml } from '@/lib/i18n/machine-translations'
 import { CATALOG_REVALIDATE, isWpConfigured } from './config'
 import { wpFetch } from './client'
+import { sanitizeWpHtml } from './sanitize'
 
 /**
  * Live blog posts from WordPress native post type.
@@ -282,7 +283,8 @@ function mapPost(node: WirePost, includeContent = false): (BlogPost & { content?
   }
 
   if (includeContent) {
-    post.content = node.content ?? ''
+    // Rendered with dangerouslySetInnerHTML in blog-article.tsx (H2).
+    post.content = sanitizeWpHtml(node.content)
   }
 
   return post
