@@ -193,15 +193,45 @@ inf "صفحة رئيسية: page_on_front = $(wp option get page_on_front)"
 inf "صفحة مقالات : page_for_posts = $(wp option get page_for_posts)"
 
 # ------------------------------------------------------ 10) WooCommerce
-sec "10) WooCommerce"
+sec "10) WooCommerce والصفحات المطلوبة"
 if echo "$active" | grep -qx woocommerce; then
-  inf "العملة   : $(wp option get woocommerce_currency) (المطلوب ILS)"
-  inf "البلد    : $(wp option get woocommerce_default_country)"
-  inf "صفحة سلة : $(wp option get woocommerce_cart_page_id)"
-  inf "صفحة حساب: $(wp option get woocommerce_myaccount_page_id)"
+	inf "العملة    : $(wp option get woocommerce_currency) (المطلوب ILS)"
+	inf "البلد     : $(wp option get woocommerce_default_country)"
+	inf "صفحة متجر: $(wp option get woocommerce_shop_page_id)"
+	inf "صفحة سلة  : $(wp option get woocommerce_cart_page_id)"
+	inf "صفحة دفع  : $(wp option get woocommerce_checkout_page_id)"
+	inf "صفحة حساب : $(wp option get woocommerce_myaccount_page_id)"
 else
-  no "WooCommerce مش مفعّلة"
+	no "WooCommerce مش مفعّلة"
 fi
+
+page_audit=$(wp eval '
+$pages = [
+	[936, "shop", "woocommerce_shop_page_id"],
+	[937, "cart", "woocommerce_cart_page_id"],
+	[938, "checkout", "woocommerce_checkout_page_id"],
+	[939, "my-account", "woocommerce_myaccount_page_id"],
+	[2368, "home", ""], [4273, "cars", ""], [4274, "products", ""],
+	[2218, "blog", ""], [3351, "contact", ""],
+	[849, "privacy-policy-ar", ""], [853, "privacy-policy-en", ""], [848, "privacy-policy-he", ""],
+	[858, "terms-ar", ""], [861, "terms-en", ""], [856, "terms-he", ""],
+	[1030, "return-policy-ar", ""], [1033, "return-policy-en", ""], [1029, "return-policy-he", ""],
+	[940, "refund_returns", ""],
+];
+foreach ($pages as [$id, $slug, $option]) {
+	$post = get_post($id);
+	$mapped = "" === $option || (int) get_option($option, 0) === $id;
+	$ok = $post instanceof WP_Post && "page" === $post->post_type && $slug === $post->post_name && "publish" === $post->post_status && $mapped;
+	printf("%s|%d|%s|%s|%s\n", $ok ? "OK" : "FAIL", $id, $slug, $post instanceof WP_Post ? $post->post_status : "missing", $mapped ? "mapped" : "mapping-mismatch");
+}
+')
+printf '%s\n' "$page_audit" | sed 's/^/    /'
+if printf '%s\n' "$page_audit" | grep -q '^FAIL|'; then
+	no "صفحة مطلوبة مفقودة أو غير منشورة أو تعيين WooCommerce غير صحيح"
+else
+	ok "كل صفحات WooCommerce وCMS المطلوبة منشورة ومطابقة"
+fi
+
 
 # ----------------------------------------------------------- 11) GraphQL
 sec "11) GraphQL"

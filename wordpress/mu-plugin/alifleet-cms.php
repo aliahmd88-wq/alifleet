@@ -781,6 +781,64 @@ add_action(
  * missing, instead of letting the site fail with an opaque GraphQL error.
  * ---------------------------------------------------------------------- */
 
+/**
+ * Report required WooCommerce mappings and CMS pages that cannot be served.
+ *
+ * @return string[]
+ */
+function alifleet_required_page_issues(): array {
+	$issues = [];
+	$woo_pages = [
+		'woocommerce_shop_page_id'      => [ 'Shop', 'shop' ],
+		'woocommerce_cart_page_id'      => [ 'Cart', 'cart' ],
+		'woocommerce_checkout_page_id'  => [ 'Checkout', 'checkout' ],
+		'woocommerce_myaccount_page_id' => [ 'My account', 'my-account' ],
+	];
+
+	foreach ( $woo_pages as $option => [ $label, $expected_slug ] ) {
+		$page_id = (int) get_option( $option, 0 );
+		$page    = $page_id > 0 ? get_post( $page_id ) : null;
+		if ( ! $page instanceof WP_Post || 'page' !== $page->post_type ) {
+			$issues[] = sprintf( '%s (invalid assignment: %d)', $label, $page_id );
+			continue;
+		}
+		if ( $expected_slug !== $page->post_name || 'publish' !== $page->post_status ) {
+			$issues[] = sprintf( '%s (#%d, %s, %s)', $label, $page_id, $page->post_name, $page->post_status );
+		}
+	}
+
+	$cms_slugs = [
+		'home',
+		'cars',
+		'products',
+		'blog',
+		'contact',
+		'privacy-policy-ar',
+		'privacy-policy-en',
+		'privacy-policy-he',
+		'terms-ar',
+		'terms-en',
+		'terms-he',
+		'return-policy-ar',
+		'return-policy-en',
+		'return-policy-he',
+		'refund_returns',
+	];
+
+	foreach ( $cms_slugs as $slug ) {
+		$page = get_page_by_path( $slug, OBJECT, 'page' );
+		if ( ! $page instanceof WP_Post ) {
+			$issues[] = sprintf( '%s (missing)', $slug );
+			continue;
+		}
+		if ( 'publish' !== $page->post_status ) {
+			$issues[] = sprintf( '%s (#%d, %s)', $slug, $page->ID, $page->post_status );
+		}
+	}
+
+	return $issues;
+}
+
 add_action(
 	'admin_notices',
 	static function (): void {
@@ -804,6 +862,11 @@ add_action(
 		}
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			$problems[] = 'WooCommerce is not active — the spare parts catalogue and cart will be empty.';
+		}
+
+		$page_issues = alifleet_required_page_issues();
+		if ( $page_issues ) {
+			$problems[] = 'Required storefront pages are unavailable: ' . implode( ', ', $page_issues ) . '.';
 		}
 
 		if ( ! $problems ) {
@@ -1405,6 +1468,33 @@ function alifleet_maybe_ping_revalidate( int $post_id, $post ): void {
 	alifleet_ping_revalidate();
 }
 
+/**
+ * Purge when served content enters or leaves the published state.
+ *
+ * save_post only sees the final status, so publish-to-draft/private transitions
+ * otherwise leave removed content in the frontend cache until it expires.
+ *
+ * @param string  $new_status New post status.
+ * @param string  $old_status Previous post status.
+ * @param WP_Post $post       Transitioned post.
+ */
+function alifleet_maybe_ping_status_transition( string $new_status, string $old_status, $post ): void {
+	if ( $new_status === $old_status || ! $post instanceof WP_Post ) {
+		return;
+	}
+
+	$watched = [ 'page', 'post', 'product', 'cars', 'trucks', 'import_car', 'testi' ];
+	if ( ! in_array( $post->post_type, $watched, true ) ) {
+		return;
+	}
+	if ( 'publish' !== $new_status && 'publish' !== $old_status ) {
+		return;
+	}
+
+	alifleet_ping_revalidate();
+}
+
+add_action( 'transition_post_status', 'alifleet_maybe_ping_status_transition', 20, 3 );
 add_action( 'save_post', 'alifleet_maybe_ping_revalidate', 20, 2 );
 add_action( 'trashed_post', 'alifleet_ping_revalidate', 20, 0 );
 
