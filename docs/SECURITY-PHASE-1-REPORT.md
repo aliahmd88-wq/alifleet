@@ -56,7 +56,7 @@ curl -s -o /dev/null -w "%{http_code}\n" https://alifleet.com/cms/wp-login.php
 1. **ووردبريس:** ثبّت إضافة Limit Login Attempts Reloaded، وفعّل التحقق بخطوتين (WP 2FA) لحساب `ali`، وغيّر كلمة المرور لواحدة طويلة عشوائية.
 2. **XML-RPC** على a-f.site ما زال مفتوحاً لأن Jetpack يستخدمه. لو Jetpack غير ضروري: احذفه وأضف `add_filter('xmlrpc_enabled','__return_false')` في الـ mu-plugin.
 3. **Coolify env:** أضف `SITE_ORIGIN=https://alifleet.com` و `NEXT_PUBLIC_SITE_URL=https://alifleet.com` و `WORDPRESS_REVALIDATE_SECRET` (نفس القيمة المخزنة في ووردبريس بـ `wp option alifleet_revalidate_secret`).
-4. **Vercel Analytics:** المكوّن يطلب `/_vercel/insights/script.js` ويرجع 404 في كل صفحة لأن الموقع ليس على Vercel. ليس أمنياً لكنه ضوضاء في الكونسول. يُحذف من `app/layout.tsx` أو يُستبدل بـ GA4.
+4. **Vercel Analytics:** اتحذف (كان يرجع 404 في كل صفحة لأن الموقع ليس على Vercel).
 5. **حزم لم تعد مستخدمة** بعد حذف الشات: `ai` و `@ai-sdk/react`. يمكن حذفها من `package.json`.
 6. **HSTS:** إضافة `includeSubDomains; preload` بعد التأكد أن كل الـ subdomains تعمل بـ HTTPS.
 7. **نسخ احتياطي دوري** لقاعدة بيانات ووردبريس و `wp-content/uploads`، وتحديث الإضافات شهرياً.

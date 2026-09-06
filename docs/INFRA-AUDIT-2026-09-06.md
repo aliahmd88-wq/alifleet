@@ -180,6 +180,6 @@ alifleet.com         CAA  0 issue "letsencrypt.org"
 
 ## 6. ملاحظات
 
-- Vercel Analytics يطلب `/_vercel/insights/script.js` ويرجع 404 على Coolify في كل صفحة. ليس أمنياً؛ يُحذف من `app/layout.tsx` أو يُستبدل بـ GA4 حين تقرر.
+- Vercel Analytics كان يطلب `/_vercel/insights/script.js` ويرجع 404 على Coolify في كل صفحة → اتحذف من `app/layout.tsx` مع حزمته ونطاقاته في الـ CSP (بطلبك). لو أردت تحليلات لاحقاً: GA4 أو Plausible.
 - `readme.html` و `license.txt` في جذر ووردبريس يكشفان الإصدار فقط؛ يعودان مع كل تحديث فتجاهلهما أو احذفهما بعد كل تحديث.
 - `xmlrpc.php` يعيد 405 على GET لكنه يعمل لـ Jetpack؛ لو أزلت Jetpack، عطّله.

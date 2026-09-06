@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import {
   Geist,
@@ -183,7 +182,6 @@ export default async function RootLayout({
           </StoreProvider>
         </LanguageProvider>
         <BackToTop />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
