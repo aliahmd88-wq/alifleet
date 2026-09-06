@@ -6,10 +6,14 @@ __v0_jsx-dev-runtime.ts
 .v0-trash/
 .vercel/
 
-# Environment variables
-.env*.local
+# Environment variables — real env files never go to git (.env.example is fine)
+.env
+.env.*
+!.env.example
 
 # Common ignores
 node_modules
 .next/
 .DS_Store
+# project uses pnpm; an accidental npm install must not commit a second lockfile
+package-lock.json

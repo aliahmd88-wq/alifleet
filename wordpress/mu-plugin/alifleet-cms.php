@@ -2106,6 +2106,46 @@ add_filter(
 	2
 );
 
+/* -------------------------------------------------------------------------
+ * Security: REST hardening
+ *
+ * Anonymous callers could read /wp/v2/users, which returns every account's
+ * login slug — the username half of a credential-stuffing attack — and the
+ * REST index, which advertises every route on the site. Both are withheld
+ * from unauthenticated requests. Logged-in editors keep full REST access, and
+ * the Next.js server is unaffected because it only ever calls /graphql and
+ * /alifleet/v1/*.
+ * ---------------------------------------------------------------------- */
+add_filter(
+	'rest_endpoints',
+	static function ( array $endpoints ): array {
+		if ( is_user_logged_in() ) {
+			return $endpoints;
+		}
+		foreach ( array_keys( $endpoints ) as $route ) {
+			if ( 0 === strpos( (string) $route, '/wp/v2/users' ) ) {
+				unset( $endpoints[ $route ] );
+			}
+		}
+		return $endpoints;
+	}
+);
+
+add_filter(
+	'rest_index',
+	static function ( WP_REST_Response $response ): WP_REST_Response {
+		if ( is_user_logged_in() ) {
+			return $response;
+		}
+		$data = $response->get_data();
+		if ( is_array( $data ) ) {
+			unset( $data['routes'], $data['namespaces'], $data['authentication'] );
+			$response->set_data( $data );
+		}
+		return $response;
+	}
+);
+
 add_action(
 	'rest_api_init',
 	static function (): void {
