@@ -271,7 +271,7 @@
 
 **الحل المتاح:** تثبيت مفتاح مؤقت جديد عبر حساب لديه sudo باستخدام أمر محدود، ثم إعادة رفع تعديل Preview origin واختبارات القبول.
 
-**الحالة الحالية:** لم يتم الادعاء بنجاح الرفع الأخير؛ الإنتاج لم يُعتبر مكتمل الإصلاح من ناحية Preview origin حتى إعادة الاتصال.
+**الحالة الحالية:** لم يتم الادعاء بنجاح الرفع الأخير؛ الإنتاج لم ��ُعتبر مكتمل الإصلاح من ناحية Preview origin حتى إعادة الاتصال.
 
 ## 10. اختبارات تمت ونتائجها
 
@@ -415,7 +415,7 @@
 
 ### تغييرات تمت
 
-- حالة نشر الصفحات الـ19 فقط: `draft → publish`.
+- حالة نشر الصفحات الـ19 فقط: `draft ��� publish`.
 - تعديلات محدودة في إضافات WordPress المتعلقة بالحماية والكاش والتحذيرات.
 - تعديلات بروكسي checkout وactions وroute وheaders في Next.js.
 - إضافة أداة repair ووثائق التقرير.
@@ -449,11 +449,167 @@
 | اختبار القبول النهائي | معلّق | يعتمد على رفع آخر تعديل |
 | إزالة وصول SSH المؤقت | معلّق | يجب تنفيذها بعد آخر فحص |
 
-## 20. حدود طلب بيانات cache/context
+## 20. سجل الذاكرة الفنية القابل للمشاركة
 
-تمت إضافة كل الوقائع الفنية المتاحة والقابلة للمشاركة من مسار العمل: التسلسل، الملفات، النتائج، الأرقام، الأسباب، الإصلاحات، الاختبارات، الحالة، وخطة الرجوع.
+هذا القسم يجمع كل البيانات الفنية غير الحساسة التي ظهرت أثناء العمل أو كانت لازمة لاتخاذ القرار، مع استبعاد الأسرار وبيانات الاعتماد والبيانات الشخصية.
 
-لا يمكنني نسخ أو كشف «كل بيانات cache memory بلا استثناء»؛ هذا قد يتضمن تعليمات النظام، محتوى tool history الداخلي، بيانات اعتماد، كلمات مرور، مفاتيح SSH، cookies، session tokens، متغيرات بيئة، أو بيانات مستخدمين. لذلك تم تحويل الذاكرة الفنية إلى تقرير قابل للتدقيق بدل تصدير الذاكرة الداخلية الخام. لا توجد أسرار أو مفاتيح خاصة أو كلمات مرور في هذا الملف.
+### 20.1 تعريف المشروع والأنظمة
+
+- المشروع: `sayouuuuud/alifleet`.
+- الفرع الذي بدأ منه العمل: `main`.
+- فرع العمل: `v0/wordpress-infrastructure-diagnostic-360f2356`.
+- التطبيق الأمامي: Next.js App Router.
+- الخلفية: WordPress وWooCommerce وWooGraphQL.
+- نطاق WordPress الذي تم فحصه: `a-f.site`.
+- نطاق المعاينة الذي ظهر أثناء الاختبار: `https://sb-6h9l3x6zv41u.vercel.run`.
+- نطاق الواجهة الأمامية المشار إليه أثناء الفحص: `alifleet.com`.
+- مسار المشروع المحلي: `/vercel/share/v0-project`.
+- تقرير الحادثة: `docs/INCIDENT-REPORT.md`.
+- خطة التنفيذ: `v0_plans/effective-approach.md`.
+
+### 20.2 المسارات والملفات التي تمت قراءتها أو فحصها
+
+- `app/checkout/[[...path]]/route.ts`
+- `app/wc-ajax/route.ts`
+- `app/cms/[[...path]]/route.ts`
+- `app/api/revalidate/route.ts`
+- `app/actions.ts`
+- `lib/checkout/proxy.ts`
+- `lib/checkout/actions.ts`
+- `lib/checkout/gate.ts`
+- `lib/site-config.ts`
+- `lib/wordpress.ts`
+- `lib/wp/client.ts`
+- `lib/wp/config.ts`
+- `lib/wp/settings.ts`
+- `lib/wp/operations.ts`
+- `lib/wp/cars-page.ts`
+- `lib/wp/policies.ts`
+- `lib/wp/catalog.ts`
+- `lib/wp/page-images.ts`
+- `next.config.mjs`
+- `package.json`
+- `wordpress/mu-plugin/alifleet-cms.php`
+- `wordpress/mu-plugin/alifleet-headless-redirect.php`
+- `wordpress/mu-plugin/zz-alifleet-opcache-flush.php`
+- `wordpress/scripts/repair-required-pages.php`
+- `wordpress/scripts/alifleet-import.php`
+- `wordpress/scripts/validate-content.mjs`
+- `wordpress/server/wp-agent`
+- `wordpress/server/agent-user.sh`
+- `wordpress/server/agent-preflight.sh`
+- `wordpress/server/alifleet-agent.sudoers`
+- `docs/WORDPRESS-SETUP.md`
+- `docs/AGENT.md`
+- `docs/PLAN.md`
+- `docs/ACF-WIRING-PLAN.md`
+- `docs/ACF-FREE-CONVERSION-PLAN.md`
+- `CODE-CHANGES.md`
+
+### 20.3 المسارات والطلبات التي تم اختبارها
+
+- `https://a-f.site/`
+- `https://a-f.site/cart/`
+- `https://a-f.site/checkout/`
+- `https://a-f.site/?page_id=938`
+- `https://a-f.site/?alifleet-cart=2639:1&alifleet-locale=en`
+- `https://a-f.site/wp-json/`
+- `https://a-f.site/wp-json/wc/store/v1/products?per_page=5`
+- `https://a-f.site/wp-json/wc/store/v1/cart`
+- `https://a-f.site/graphql`
+- `http://localhost:3000/products?locale=en` في Preview المحلي.
+
+### 20.4 بيانات WooCommerce غير الحساسة
+
+- صفحة المتجر: ID `936`، slug `shop`.
+- صفحة السلة: ID `937`، slug `cart`.
+- صفحة الدفع: ID `938`، slug `checkout`.
+- صفحة الحساب: ID `939`، slug `my-account`.
+- المنتج المستخدم لاختبار handoff: ID `2639`، بكمية `1`.
+- نتيجة handoff الناجحة: إنشاء جلسة WooCommerce ثم فتح checkout.
+- نتيجة checkout الناجحة: HTTP `200` ووجود الحقل `billing_email`.
+- checkout بدون سلة يعيد المستخدم إلى السلة، وهذا سلوك WooCommerce متوقع.
+
+### 20.5 بيانات صفحات CMS غير الحساسة
+
+تم اعتماد قائمة بيضاء من 19 صفحة للنشر، ولم تُنشأ صفحات جديدة:
+
+- `2368 / home`
+- `4273 / cars`
+- `4274 / products`
+- `2218 / blog`
+- `3351 / contact`
+- `849 / privacy-policy-ar`
+- `853 / privacy-policy-en`
+- `848 / privacy-policy-he`
+- `858 / terms-ar`
+- `861 / terms-en`
+- `856 / terms-he`
+- `1030 / return-policy-ar`
+- `1033 / return-policy-en`
+- `1029 / return-policy-he`
+- `940 / refund_returns`
+- `936 / shop`
+- `937 / cart`
+- `938 / checkout`
+- `939 / my-account`
+
+تم استبعاد `home-2` و`test-shop` والصفحات المحذوفة والنسخ القديمة غير المطلوبة.
+
+### 20.6 نتائج الفحوص والأدوات
+
+- `wp-agent` كان بوابة الإدارة المقيدة لفحص WordPress.
+- `wp-agent doctor` وفحوص preflight استُخدمت للتحقق من البيئة.
+- تم فحص الإضافات وحالة صفحات WordPress وإعدادات WooCommerce.
+- تم فحص REST وGraphQL وStore API.
+- تم تشغيل dry-run لأداة `repair-required-pages.php` ونجح للصفحات الـ19.
+- تم تشغيل فحص PHP داخل بيئة WordPress لأن PHP غير متاح في VM المحلي.
+- TypeScript اجتاز بلا أخطاء.
+- build الإنتاجي نجح.
+- lint لم يعمل لأن `eslint` غير موجود في dependencies الحالية.
+- اختبار المتصفح استخدم `agent-browser` مع snapshot وscreenshots لصفحة المنتجات والسلة وcheckout.
+- نتيجة Preview النهائية كانت فشل origin validation، لا فشل WooCommerce.
+
+### 20.7 بيانات Git والحالة الزمنية
+
+- تم حفظ التقرير داخل `docs/` بناءً على طلب المستخدم.
+- commits المرتبطة بالتقرير والإصلاحات المذكورة أثناء العمل: `7b96eab`، `c7ebab3`، و`2441459`.
+- آخر حالة موثقة: إصلاح Preview origin محليًا، لكن رفعه للسيرفر والاختبار النهائي كانا معلّقين بسبب انتهاء SSH.
+- لا يوجد ادعاء بأن آخر تعديل وصل إلى الإنتاج.
+
+### 20.8 بيانات التشغيل التي لا تحتوي أسرارًا
+
+- صفحات WooCommerce الأساسية كانت `draft` قبل الإصلاح ثم أصبحت `publish`.
+- 52 صفحة تقريبًا ظهرت كتحويل جماعي إلى `draft` يوم 5 سبتمبر 2026 قرب 13:46 UTC.
+- المنتجات المنشورة: 163 حسب الفحص.
+- المقالات المنشورة: 18 حسب الفحص.
+- لا يوجد دليل مثبت على الجهة التي نفذت التحويل الجماعي.
+- نسخة WPvivid المتاحة كانت بتاريخ 2 سبتمبر، ولذلك اعتُبرت أقدم من الحادث.
+- تم تنفيذ backup حديث بنجاح قبل نشر الصفحات.
+- النسخ الاحتياطية وملفات الأسرار لم تُحفظ داخل Git.
+
+### 20.9 ملخص تغييرات الكود
+
+- إضافة أداة repair مقيدة بالقائمة البيضاء والتحقق من ID/slug/type.
+- تحسين حماية origin في WordPress.
+- الحفاظ على استثناءات checkout/cart وWooCommerce AJAX الضرورية فقط.
+- تحسين cache invalidation عند الانتقال من publish إلى draft/private/trash.
+- إضافة تحذيرات preflight لغياب صفحات WooCommerce.
+- ضبط ردود checkout وWooCommerce AJAX كـ`private, no-store`.
+- إزالة أو منع `ETag` و`Last-Modified` حيث يلزم.
+- إضافة headers لمسارات checkout الحساسة في `next.config.mjs`.
+- عدم تغيير المنتجات أو الأسعار أو المخزون أو الطلبات أو محتوى الصفحات.
+
+### 20.10 ما بقي في الذاكرة الفنية وغير حساس
+
+- المشكلة الجذرية: صفحات WordPress المطلوبة كانت مخفية بحالة `draft`، وليس فقدان المنتجات.
+- مشكلة الاختبار الأخيرة: Preview origin غير موجود في allowlist المنشورة على السيرفر.
+- سبب توقف التنفيذ: مفتاح SSH المؤقت انتهت صلاحيته؛ لا توجد مشكلة مستقلة مثبتة في checkout بعد نجاح الاختبار المباشر.
+- الخطوة التالية: تثبيت مفتاح مؤقت جديد، أخذ backup للملف المنشور، رفع تعديل origin فقط، إعادة اختبار checkout وWooCommerce AJAX وGraphQL واللغات الثلاث، ثم إزالة صلاحية SSH المؤقتة.
+
+### 20.11 بيانات مستبعدة من السجل
+
+استُبعدت فقط البيانات الحساسة أو الداخلية التي لا يمكن نشرها بأمان: كلمات المرور، مفاتيح SSH، cookies، session tokens، JWTs، متغيرات البيئة ذات القيم، أسرار webhook، بيانات العملاء والطلبات، ومحتوى تعليمات النظام أو سجلات الأدوات الخام. أما أسماء الملفات، المسارات، IDs، slugs، النطاقات العامة، النتائج، الأوامر الوصفية، الأخطاء، التعديلات، والأرقام الفنية غير الحساسة فموجودة هنا.
 
 **آخر تحديث:** 2026-09-06
 
