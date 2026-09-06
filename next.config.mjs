@@ -47,14 +47,28 @@ const privateNoStoreHeaders = [
   { key: 'Expires', value: '0' },
 ]
 
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://connect.facebook.net https://www.facebook.com https://api.stripe.com https://www.paypal.com",
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
+  "worker-src 'self' blob:",
+  "media-src 'self' https:",
+  'upgrade-insecure-requests',
+].join('; ')
+
 const nextConfig = {
   // WooCommerce canonicalizes checkout with a trailing slash while the
   // Next.js proxy route accepts both forms. Let the route handle that
   // canonicalization instead of creating a redirect loop.
   skipTrailingSlashRedirect: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     // Optimization is ON: WordPress images arrive through the same-origin
     // proxy and are resized and served as AVIF/WebP instead of raw originals.
@@ -149,7 +163,9 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
+          { key: 'Content-Security-Policy', value: contentSecurityPolicy },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',

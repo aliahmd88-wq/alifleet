@@ -25,17 +25,13 @@ export async function POST(request: Request): Promise<Response> {
   // Defaulting to open would mean a missing env var quietly turns the cache
   // into a public purge button pointed at the WordPress box.
   if (!secret) {
-    console.log('[v0] revalidate: WORDPRESS_REVALIDATE_SECRET is not set')
     return Response.json(
       { revalidated: false, error: 'revalidation is not configured' },
       { status: 503 }
     )
   }
 
-  const provided =
-    request.headers.get('x-alifleet-revalidate-secret') ??
-    new URL(request.url).searchParams.get('secret') ??
-    ''
+  const provided = request.headers.get('x-alifleet-revalidate-secret') ?? ''
 
   if (!secretsMatch(provided, secret)) {
     // No detail in the body: a caller guessing the secret learns nothing about

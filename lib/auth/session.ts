@@ -20,30 +20,18 @@ import { AUTH_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from '@/lib/wp/config'
 const AUTH_COOKIE = 'alifleet_auth'
 const REFRESH_COOKIE = 'alifleet_refresh'
 
-/**
- * Coolify currently exposes the storefront over HTTP, while production may
- * later sit behind an HTTPS proxy. A hard-coded `secure: true` makes browsers
- * silently discard the login cookies on the current HTTP origin. Prefer the
- * proxy's protocol signal and keep a safe HTTP fallback for this deployment.
- */
+/** Production cookies are always HTTPS-only; plain HTTP is allowed solely
+ * for a developer opening the app directly on localhost. */
 async function sessionCookieOptions() {
   const requestHeaders = await headers()
-  const forwardedProto = requestHeaders
-    .get('x-forwarded-proto')
-    ?.split(',')[0]
-    ?.trim()
-    .toLowerCase()
-
-  let secure = forwardedProto === 'https'
-  if (!forwardedProto) {
-    const forwarded = requestHeaders.get('forwarded') ?? ''
-    const protocol = forwarded.match(/(?:^|;)\s*proto=([^;]+)/i)?.[1]
-    secure = protocol?.trim().toLowerCase() === 'https'
-  }
+  const host = (requestHeaders.get('host') ?? '').split(':', 1)[0].toLowerCase()
+  const localDevelopment =
+    process.env.NODE_ENV === 'development' &&
+    (host === 'localhost' || host === '127.0.0.1' || host === '[::1]')
 
   return {
     httpOnly: true,
-    secure,
+    secure: !localDevelopment,
     sameSite: 'lax' as const,
     path: '/',
   }

@@ -18,8 +18,7 @@ async function handler(request: Request, context: Context) {
   // WooCommerce empties the basket while placing the order, so the freshness
   // check below can no longer hold by the time order-received is rendered.
   const method = request.method.toUpperCase()
-  const bypass =
-    method === 'POST' || method === 'OPTIONS' || isOrderReceivedPath(segments)
+  const bypass = method === 'POST' || isOrderReceivedPath(segments)
 
   if (!bypass) {
     const cookieStore = await cookies()
@@ -56,4 +55,3 @@ async function handler(request: Request, context: Context) {
 export const GET = handler
 export const POST = handler
 export const HEAD = handler
-export const OPTIONS = handler

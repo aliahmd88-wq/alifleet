@@ -8,8 +8,14 @@
 export function proxied(src: string | null | undefined): string {
   if (!src) return '/placeholder.svg'
 
-  // Already relative or https — safe to use directly.
+  // Already relative or HTTPS — safe to use directly.
   if (!src.startsWith('http://')) return src
 
-  return `/api/img?url=${encodeURIComponent(src)}`
+  try {
+    const secureSource = new URL(src)
+    secureSource.protocol = 'https:'
+    return `/api/img?url=${encodeURIComponent(secureSource.toString())}`
+  } catch {
+    return '/placeholder.svg'
+  }
 }

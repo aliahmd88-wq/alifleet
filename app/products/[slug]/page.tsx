@@ -3,6 +3,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProductDetail } from '@/components/product-detail'
 import { absoluteUrl } from '@/lib/seo'
+import { serializeJsonLd } from '@/lib/json-ld'
 import { getPart, getRelatedParts } from '@/lib/wp/catalog'
 
 /**
@@ -77,8 +78,8 @@ export default async function ProductPage({
     <>
       <script
         type="application/ld+json"
-        // Values come from our own CMS, and JSON.stringify escapes the payload.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        // CMS values are escaped so they cannot terminate the JSON-LD script.
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(productSchema) }}
       />
       <SiteHeader />
       <main>

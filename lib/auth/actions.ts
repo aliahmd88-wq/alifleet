@@ -7,6 +7,7 @@ import { HANDOFF_QUANTITY_COOKIE, isWooStateCookie } from '@/lib/checkout/gate'
 import { wpFetch } from '@/lib/wp/client'
 import { WpError, type AuthErrorCode } from '@/lib/wp/errors'
 import { isWpConfigured } from '@/lib/wp/config'
+import { wordpressSecurityHeaders } from '@/lib/wp/request-security'
 import {
   LOGIN,
   REGISTER_USER,
@@ -28,7 +29,8 @@ const fail = (
 
 const codeOf = (error: unknown): AuthErrorCode => {
   if (error instanceof WpError) return error.code
-  console.log('[v0] Unexpected auth error:', error)
+  const errorName = error instanceof Error ? error.name : 'UnknownError'
+  console.error('[AliFleet] Unexpected authentication error.', { errorName })
   return 'unknown'
 }
 
@@ -65,13 +67,14 @@ export async function loginAction(
   if (!password) fieldErrors.password = 'missing_fields'
   if (Object.keys(fieldErrors).length) return fail('missing_fields', fieldErrors)
 
+  const securityHeaders = await wordpressSecurityHeaders()
   try {
     const data = await wpFetch<{
       login: {
         authToken: string | null
         refreshToken: string | null
       } | null
-    }>(LOGIN, { username, password })
+    }>(LOGIN, { username, password }, { securityHeaders })
 
     const authToken = data.login?.authToken
     const refreshToken = data.login?.refreshToken
@@ -120,10 +123,12 @@ export async function registerAction(
     return fail(fieldErrors.confirmPassword ?? 'missing_fields', fieldErrors)
   }
 
+  const securityHeaders = await wordpressSecurityHeaders()
   try {
     await wpFetch<{ registerUser: { user: { databaseId: number } | null } | null }>(
       REGISTER_USER,
-      { username, email, password, firstName, lastName }
+      { username, email, password, firstName, lastName },
+      { securityHeaders }
     )
   } catch (error) {
     return fail(codeOf(error))
@@ -139,7 +144,7 @@ export async function registerAction(
   try {
     const loginData = await wpFetch<{
       login: { authToken: string | null; refreshToken: string | null } | null
-    }>(LOGIN, { username, password })
+    }>(LOGIN, { username, password }, { securityHeaders })
 
     const authToken = loginData.login?.authToken
     const refreshToken = loginData.login?.refreshToken
@@ -149,10 +154,9 @@ export async function registerAction(
       signedIn = true
     }
   } catch (error) {
-    console.log(
-      '[v0] Account created but auto-login is unavailable:',
-      codeOf(error)
-    )
+    console.warn('[AliFleet] Account created but auto-login is unavailable.', {
+      code: codeOf(error),
+    })
   }
 
   // See the note in loginAction: revalidating here only delays the redirect.
@@ -197,8 +201,9 @@ export async function forgotPasswordAction(
     return fail('missing_fields', { usernameOrEmail: 'missing_fields' })
   }
 
+  const securityHeaders = await wordpressSecurityHeaders()
   try {
-    await wpFetch(SEND_PASSWORD_RESET, { username })
+    await wpFetch(SEND_PASSWORD_RESET, { username }, { securityHeaders })
   } catch (error) {
     const code = codeOf(error)
     // WordPress deliberately reveals whether an account exists here. We do not
@@ -325,8 +330,33 @@ export async function updateAddressesAction(
   return { status: 'success' }
 }
 
-/** Blocks open-redirects: only same-site paths are honoured. */
+/** Blocks scheme-relative, backslash-normalized, encoded, and control-char redirects. */
 function sanitizeRedirect(target: string) {
-  if (!target.startsWith('/') || target.startsWith('//')) return '/account'
-  return target
+  if (!target.startsWith('/') || /[\\\u0000-\u001f\u007f\u2028\u2029]/.test(target)) {
+    return '/account'
+  }
+
+  let decoded = target
+  try {
+    for (let pass = 0; pass < 3; pass += 1) {
+      const next = decodeURIComponent(decoded)
+      if (next === decoded) break
+      decoded = next
+    }
+  } catch {
+    return '/account'
+  }
+
+  if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.includes('\\')) {
+    return '/account'
+  }
+
+  try {
+    const base = new URL('https://alifleet.com')
+    const resolved = new URL(target, base)
+    if (resolved.origin !== base.origin) return '/account'
+    return `${resolved.pathname}${resolved.search}${resolved.hash}`
+  } catch {
+    return '/account'
+  }
 }

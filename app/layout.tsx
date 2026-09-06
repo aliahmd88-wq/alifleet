@@ -18,6 +18,7 @@ import { AuthProvider } from '@/lib/auth/auth-context'
 import { StoreProvider } from '@/lib/store-context'
 import { loadViewer } from '@/lib/auth/queries'
 import { siteUrl } from '@/lib/seo'
+import { serializeJsonLd } from '@/lib/json-ld'
 import { getStoreSettings } from '@/lib/wp/settings'
 import { isWpConfigured } from '@/lib/wp/config'
 import {
@@ -147,7 +148,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: serializeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'AutoPartsStore',
               name: SITE_NAME,
