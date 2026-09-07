@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
-import createGlobe from 'cobe'
+import Image from 'next/image'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMotionValue, useSpring } from 'framer-motion'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -11,8 +11,31 @@ import { useLanguage } from '@/lib/i18n/language-context'
 
 gsap.registerPlugin(ScrollTrigger)
 
+type NavigatorWithDeviceHints = Navigator & {
+  connection?: { saveData?: boolean }
+  deviceMemory?: number
+}
+
+type GlobeController = ReturnType<(typeof import('cobe'))['default']>
+
 function locationToAngles(lat: number, lng: number): [number, number] {
   return [Math.PI - ((lng * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180]
+}
+
+function canUseInteractiveGlobe() {
+  if (typeof window === 'undefined') return false
+
+  const device = navigator as NavigatorWithDeviceHints
+  const hasLimitedMemory = device.deviceMemory !== undefined && device.deviceMemory <= 4
+  const hasLimitedCpu = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4
+
+  return (
+    window.matchMedia('(min-width: 1024px)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    !device.connection?.saveData &&
+    !hasLimitedMemory &&
+    !hasLimitedCpu
+  )
 }
 
 export function GlobalReach() {
@@ -48,11 +71,11 @@ export function GlobalReach() {
     },
   ]
 
-  // Start facing Cairo / Europe so land is visible immediately
   const phiRef = useRef(locationToAngles(30.0444, 31.2357)[0])
   const thetaRef = useRef(0.3)
   const focusRef = useRef<[number, number] | null>(null)
-  const visibleRef = useRef(true)
+  const visibleRef = useRef(false)
+  const interactiveRef = useRef(false)
   const draggingRef = useRef(false)
   const pointerStartX = useRef(0)
   const dragStartOffset = useRef(0)
@@ -64,11 +87,13 @@ export function GlobalReach() {
   const springOffset = useSpring(dragOffset, { mass: 1, stiffness: 280, damping: 40 })
 
   const focusCity = useCallback((lat: number, lng: number, city: string) => {
+    if (!interactiveRef.current) return
     focusRef.current = locationToAngles(lat, lng)
     setActiveCity(city)
   }, [])
 
   const releaseFocus = useCallback(() => {
+    if (!interactiveRef.current) return
     focusRef.current = null
     setActiveCity(null)
   }, [])
@@ -76,54 +101,25 @@ export function GlobalReach() {
   useEffect(() => {
     const canvas = canvasRef.current
     const wrapper = wrapperRef.current
-    if (!canvas || !wrapper) return
+    if (!canvas || !wrapper || !canUseInteractiveGlobe()) return
 
-    /* The globe is a WebGL canvas that re-renders every frame. Rendering it at
-       2x on an 820px box means a ~1640px buffer — very expensive on a laptop
-       GPU. Cap the pixel ratio and let a resize be debounced. */
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    let width = wrapper.offsetWidth
-    let resizeTimer: number | undefined
-    const applySize = () => {
-      width = wrapper.offsetWidth
-      canvas.width = width * dpr
-      canvas.height = width * dpr
-    }
-    applySize()
-    const onResize = () => {
-      window.clearTimeout(resizeTimer)
-      resizeTimer = window.setTimeout(applySize, 150)
-    }
-    window.addEventListener('resize', onResize)
-
-    const globe = createGlobe(canvas, {
-      devicePixelRatio: dpr,
-      width: width * dpr,
-      height: width * dpr,
-      phi: phiRef.current,
-      theta: thetaRef.current,
-      dark: 0,
-      diffuse: 0.9,
-      // 22 000 samples is far more dot geometry than is readable at this size.
-      mapSamples: 14000,
-      mapBrightness: 5,
-      baseColor: [0.32, 0.44, 0.62],
-      markerColor: [0.05, 0.35, 0.95],
-      glowColor: [0.92, 0.95, 1],
-      markers: [],
-    })
-
-    // cobe v2 has no `onRender` callback and no internal loop — we drive the
-    // animation manually with requestAnimationFrame and globe.update().
+    let disposed = false
+    let globe: GlobeController | null = null
     let raf = 0
-    const tick = () => {
-      // The render loop only runs while the globe is actually on screen. It
-      // used to spin a WebGL draw call every frame for the whole session, which
-      // stole frames from every other section the user scrolled to.
-      if (!visibleRef.current) {
-        raf = requestAnimationFrame(tick)
-        return
-      }
+    let idleHandle = 0
+    let fallbackTimer = 0
+    let width = Math.max(wrapper.offsetWidth, 1)
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+
+    const stopLoop = () => {
+      if (!raf) return
+      cancelAnimationFrame(raf)
+      raf = 0
+    }
+
+    const drawFrame = () => {
+      if (!globe) return
+
       const focus = focusRef.current
       if (focus) {
         const [targetPhi, targetTheta] = focus
@@ -138,82 +134,129 @@ export function GlobalReach() {
         if (!draggingRef.current) phiRef.current += 0.005
         thetaRef.current += (0.3 - thetaRef.current) * 0.05
       }
+
+      const bufferSize = Math.round(width * dpr)
       globe.update({
         phi: phiRef.current + springOffset.get(),
         theta: thetaRef.current,
-        // Must match the canvas buffer size (width * dpr). Hardcoding `* 2`
-        // here while the canvas is sized by dpr renders the globe at the wrong
-        // scale on every display that is not exactly 2x.
-        width: width * dpr,
-        height: width * dpr,
+        width: bufferSize,
+        height: bufferSize,
       })
+    }
+
+    const tick = () => {
+      raf = 0
+      if (disposed || !visibleRef.current || document.hidden) return
+      drawFrame()
       raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(tick)
+
+    const startLoop = () => {
+      if (raf || disposed || !globe || !visibleRef.current || document.hidden) return
+      raf = requestAnimationFrame(tick)
+    }
 
     const visibility = new IntersectionObserver(
       ([entry]) => {
         visibleRef.current = entry.isIntersecting
+        if (entry.isIntersecting) startLoop()
+        else stopLoop()
       },
-      { rootMargin: '200px 0px', threshold: 0 }
+      { rootMargin: '300px 0px', threshold: 0 }
     )
-    visibility.observe(wrapper)
 
-    const timeout = setTimeout(() => setReady(true), 100)
+    const resizeObserver = new ResizeObserver(() => {
+      width = Math.max(wrapper.offsetWidth, 1)
+    })
 
-    const onPointerDown = (e: PointerEvent) => {
+    const onVisibilityChange = () => {
+      if (document.hidden) stopLoop()
+      else startLoop()
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
       draggingRef.current = true
-      pointerStartX.current = e.clientX
+      pointerStartX.current = event.clientX
       dragStartOffset.current = dragOffset.get()
       canvas.style.cursor = 'grabbing'
     }
-    const onPointerMove = (e: PointerEvent) => {
+
+    const onPointerMove = (event: PointerEvent) => {
       if (!draggingRef.current) return
-      const delta = e.clientX - pointerStartX.current
-      dragOffset.set(dragStartOffset.current + delta / 200)
+      dragOffset.set(dragStartOffset.current + (event.clientX - pointerStartX.current) / 200)
     }
+
     const onPointerUp = () => {
       draggingRef.current = false
       canvas.style.cursor = 'grab'
     }
-    const onTouchMove = (e: TouchEvent) => {
-      if (!draggingRef.current || !e.touches[0]) return
-      const delta = e.touches[0].clientX - pointerStartX.current
-      dragOffset.set(dragStartOffset.current + delta / 100)
-    }
-    const onTouchStart = (e: TouchEvent) => {
-      if (!e.touches[0]) return
-      draggingRef.current = true
-      pointerStartX.current = e.touches[0].clientX
-      dragStartOffset.current = dragOffset.get()
+
+    const initialize = async () => {
+      try {
+        const { default: createGlobe } = await import('cobe')
+        if (disposed) return
+
+        const bufferSize = Math.round(width * dpr)
+        globe = createGlobe(canvas, {
+          devicePixelRatio: dpr,
+          width: bufferSize,
+          height: bufferSize,
+          phi: phiRef.current,
+          theta: thetaRef.current,
+          dark: 0,
+          diffuse: 0.9,
+          mapSamples: 8000,
+          mapBrightness: 5,
+          baseColor: [0.32, 0.44, 0.62],
+          markerColor: [0.05, 0.35, 0.95],
+          glowColor: [0.92, 0.95, 1],
+          markers: [],
+        })
+
+        // Prime WebGL while the browser is idle so shader compilation cannot
+        // interrupt the user's first scroll into this section.
+        drawFrame()
+        interactiveRef.current = true
+        setReady(true)
+
+        visibility.observe(wrapper)
+        resizeObserver.observe(wrapper)
+        document.addEventListener('visibilitychange', onVisibilityChange)
+        canvas.addEventListener('pointerdown', onPointerDown)
+        window.addEventListener('pointermove', onPointerMove)
+        window.addEventListener('pointerup', onPointerUp)
+      } catch {
+        // The local still remains visible if WebGL is unavailable or blocked.
+      }
     }
 
-    canvas.addEventListener('pointerdown', onPointerDown)
-    window.addEventListener('pointermove', onPointerMove)
-    window.addEventListener('pointerup', onPointerUp)
-    canvas.addEventListener('touchstart', onTouchStart, { passive: true })
-    canvas.addEventListener('touchmove', onTouchMove, { passive: true })
-    window.addEventListener('touchend', onPointerUp)
+    if (typeof window.requestIdleCallback === 'function') {
+      idleHandle = window.requestIdleCallback(() => void initialize(), { timeout: 1800 })
+    } else {
+      fallbackTimer = window.setTimeout(() => void initialize(), 400)
+    }
 
     return () => {
-      cancelAnimationFrame(raf)
-      globe.destroy()
-      clearTimeout(timeout)
+      disposed = true
+      interactiveRef.current = false
+      visibleRef.current = false
+      stopLoop()
+      if (idleHandle) window.cancelIdleCallback(idleHandle)
+      window.clearTimeout(fallbackTimer)
       visibility.disconnect()
-      window.clearTimeout(resizeTimer)
-      window.removeEventListener('resize', onResize)
+      resizeObserver.disconnect()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       canvas.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
-      canvas.removeEventListener('touchstart', onTouchStart)
-      canvas.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onPointerUp)
+      globe?.destroy()
     }
   }, [dragOffset, springOffset])
 
   useGSAP(
     () => {
-      // Entrance animations
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
       gsap.from('[data-globe-copy]', {
         y: 40,
         opacity: 0,
@@ -247,10 +290,10 @@ export function GlobalReach() {
         scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
       })
 
-      /* Continuous ambient motion. Every one of these is an infinite tween, so
-         they are created paused and only run while the section is in view —
-         otherwise they keep compositing for the rest of the session and make
-         the sections further down the page feel sticky. */
+      // The static version keeps the same composition without perpetual
+      // compositing on mobile and constrained devices.
+      if (!canUseInteractiveGlobe()) return
+
       const ambient = [
         gsap.to('[data-orbit-ring]', {
           rotate: 360,
@@ -268,18 +311,16 @@ export function GlobalReach() {
           transformOrigin: '50% 50%',
           paused: true,
         }),
-        // Floating chips bob gently
-        ...gsap.utils.toArray<HTMLElement>('[data-globe-chip]').map((chip, i) =>
+        ...gsap.utils.toArray<HTMLElement>('[data-globe-chip]').map((chip, index) =>
           gsap.to(chip, {
-            y: i % 2 === 0 ? -12 : 12,
-            duration: 2.4 + i * 0.4,
+            y: index % 2 === 0 ? -12 : 12,
+            duration: 2.4 + index * 0.4,
             repeat: -1,
             yoyo: true,
             ease: 'sine.inOut',
             paused: true,
           })
         ),
-        // Orbiting satellite container spins, icons counter-rotate to stay upright
         gsap.to('[data-satellite-track]', {
           rotate: 360,
           duration: 22,
@@ -313,7 +354,6 @@ export function GlobalReach() {
     <section ref={sectionRef} id="importing" className="overflow-hidden py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Copy + import features */}
           <div className="order-2 flex flex-col gap-8 lg:order-1">
             <div className="flex flex-col gap-4">
               <p
@@ -327,7 +367,8 @@ export function GlobalReach() {
                 data-globe-copy
                 className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-5xl"
               >
-                {t.import.title} <em className="font-serif italic text-accent">{t.import.titleEm}</em>
+                {t.import.title}{' '}
+                <em className="font-serif italic text-accent">{t.import.titleEm}</em>
               </h2>
               <p data-globe-copy className="max-w-md text-pretty leading-relaxed text-muted-foreground">
                 {t.import.lead}
@@ -380,13 +421,11 @@ export function GlobalReach() {
             </ul>
           </div>
 
-          {/* Globe + floating objects */}
           <div className="order-1 flex items-center justify-center lg:order-2">
             <div
               data-globe-canvas
               className="relative aspect-square w-[min(620px,92vw)] md:w-[600px] lg:w-[660px]"
             >
-              {/* Rotating orbit rings */}
               <svg
                 data-orbit-ring
                 className="pointer-events-none absolute inset-0 h-full w-full text-accent/25"
@@ -420,7 +459,6 @@ export function GlobalReach() {
                 />
               </svg>
 
-              {/* Orbiting satellites (plane + ship) */}
               <div
                 data-satellite-track
                 className="pointer-events-none absolute inset-0"
@@ -428,25 +466,37 @@ export function GlobalReach() {
               >
                 <div
                   data-satellite
-                  className="absolute left-1/2 top-0 -translate-x-1/2 flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-accent shadow-sm backdrop-blur-md"
+                  className="absolute left-1/2 top-0 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-accent shadow-sm backdrop-blur-md"
                 >
                   <Plane className="size-4" />
                 </div>
                 <div
                   data-satellite
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 flex size-9 items-center justify-center rounded-full border border-border bg-background/90 text-accent shadow-sm backdrop-blur-md"
+                  className="absolute bottom-0 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-accent shadow-sm backdrop-blur-md"
                 >
                   <Ship className="size-4" />
                 </div>
               </div>
 
-              {/* Globe canvas wrapper */}
-              <div ref={wrapperRef} className="absolute inset-[1%]" style={{ contain: 'layout paint size' }}>
+              <div
+                ref={wrapperRef}
+                role="img"
+                aria-label="3D globe showing ALI FLEET import markets worldwide"
+                className="absolute inset-[1%]"
+                style={{ contain: 'layout paint size' }}
+              >
+                <Image
+                  src="/images/global-reach-fallback.png"
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 660px, (min-width: 768px) 600px, 92vw"
+                  className={`object-contain transition-opacity duration-700 ${ready ? 'opacity-0' : 'opacity-100'}`}
+                />
                 <canvas
                   ref={canvasRef}
-                  className="h-full w-full cursor-grab transition-opacity duration-1000"
-                  style={{ opacity: ready ? 1 : 0, aspectRatio: '1' }}
-                  aria-label="Interactive 3D globe showing ALI FLEET import markets worldwide"
+                  className={`relative h-full w-full transition-opacity duration-700 ${ready ? 'cursor-grab opacity-100' : 'pointer-events-none opacity-0'}`}
+                  style={{ aspectRatio: '1' }}
+                  aria-hidden="true"
                 />
                 <div
                   className="pointer-events-none absolute inset-0"
@@ -458,7 +508,6 @@ export function GlobalReach() {
                 />
               </div>
 
-              {/* Floating glass stat chips */}
               <div
                 data-globe-chip
                 className="absolute -left-2 top-[18%] flex items-center gap-2 rounded-full border border-border bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-md md:-left-6"
@@ -474,7 +523,6 @@ export function GlobalReach() {
                 {t.home.globeTracking}
               </div>
 
-              {/* Active city floating label */}
               {activeCity ? (
                 <div className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full border border-border bg-background/90 px-4 py-1.5 text-sm font-medium text-foreground shadow-sm backdrop-blur-md">
                   {activeCity}

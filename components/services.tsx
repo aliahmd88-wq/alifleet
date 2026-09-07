@@ -59,6 +59,7 @@ function SceneShell({
   return (
     <article
       data-scene
+      data-scene-index={index}
       className="sticky top-0 flex h-svh items-end overflow-hidden md:items-center"
       style={{ zIndex: index + 1 }}
     >
@@ -70,7 +71,6 @@ function SceneShell({
           muted
           loop
           playsInline
-          autoPlay
           preload="metadata"
           className="h-full w-full object-cover"
           aria-label={alt}
@@ -426,35 +426,95 @@ export function Services({ wpImages }: { wpImages?: import('@/lib/wp/page-images
     () => {
       const isRtl = document.documentElement.dir === 'rtl'
       const isSmallScreen = window.matchMedia('(max-width: 767px)').matches
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
       const panels = gsap.utils.toArray<HTMLElement>('[data-scene]')
+      const videos = panels
+        .map((panel) => panel.querySelector<HTMLVideoElement>('[data-scene-video]'))
+        .filter((video): video is HTMLVideoElement => video !== null)
 
-      /* The videos autoplay normally; this only pauses the ones that are off
-         screen so we are never decoding three fullscreen MP4s at once.
-         Playback is deliberately NOT gated on `prefers-reduced-motion` —
-         gating it there left every scene frozen on the poster frame. */
-      const videos = document.querySelectorAll<HTMLVideoElement>('[data-scene-video]')
-      const videoObserver = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const video = entry.target as HTMLVideoElement
-            if (entry.isIntersecting) {
-              video.play().catch(() => {})
-            } else {
-              video.pause()
-            }
-          }
-        },
-        // Start a little early so the scene is already moving on arrival.
-        { rootMargin: '50% 0px', threshold: 0 }
+      let activeSceneIndex = 0
+      let playbackRequest = 0
+
+      const isSectionVisible = () => {
+        const section = sectionRef.current
+        if (!section) return false
+        const rect = section.getBoundingClientRect()
+        return rect.bottom > 0 && rect.top < window.innerHeight
+      }
+
+      const syncPlayback = () => {
+        const request = ++playbackRequest
+        const shouldPlay =
+          isSectionVisible() && !document.hidden && !prefersReducedMotion.matches
+
+        videos.forEach((video, index) => {
+          if (!shouldPlay || index !== activeSceneIndex) video.pause()
+        })
+
+        if (!shouldPlay) return
+        const activeVideo = videos[activeSceneIndex]
+        if (!activeVideo || !activeVideo.paused) return
+
+        void activeVideo.play().then(() => {
+          if (request !== playbackRequest) activeVideo.pause()
+        }).catch(() => {})
+      }
+
+      const setActiveScene = (index: number) => {
+        activeSceneIndex = Math.max(0, Math.min(index, videos.length - 1))
+        syncPlayback()
+      }
+
+      // Sticky scenes remain geometrically visible underneath later scenes, so
+      // their normal-flow ScrollTrigger boundaries are the reliable source of
+      // truth for which fullscreen video may decode.
+      const sceneBoundaries = panels.map((panel, index) =>
+        ScrollTrigger.create({
+          trigger: panel,
+          start: 'top 55%',
+          onEnter: () => setActiveScene(index),
+          onLeaveBack: () => setActiveScene(index - 1),
+        })
       )
-      videos.forEach((video) => videoObserver.observe(video))
+
+      const syncSceneFromScroll = () => {
+        const scrollPosition = window.scrollY
+        let nextSceneIndex = 0
+        sceneBoundaries.forEach((trigger, index) => {
+          if (scrollPosition >= trigger.start) nextSceneIndex = index
+        })
+        setActiveScene(nextSceneIndex)
+      }
+
+      const syncSectionFromScroll = () => {
+        if (isSectionVisible()) syncSceneFromScroll()
+        else syncPlayback()
+      }
+
+      const sectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) syncSceneFromScroll()
+          else syncPlayback()
+        },
+        { threshold: 0 }
+      )
+      if (sectionRef.current) sectionObserver.observe(sectionRef.current)
+
+      const initialPlaybackSync = requestAnimationFrame(syncSectionFromScroll)
+      const onVisibilityChange = () => syncPlayback()
+      const onMotionPreferenceChange = () => syncPlayback()
+      const onScrollTriggerRefresh = () => syncSectionFromScroll()
+
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      prefersReducedMotion.addEventListener('change', onMotionPreferenceChange)
+      ScrollTrigger.addEventListener('refresh', onScrollTriggerRefresh)
 
       panels.forEach((panel) => {
         /* Parallax background zoom — skipped on phones and with reduced
            motion, where scaling a fullscreen video frame every scroll tick is
            the single most expensive thing on the page. */
         const bg = panel.querySelector('[data-scene-bg]')
-        if (bg && !isSmallScreen) {
+        if (bg && !isSmallScreen && !prefersReducedMotion.matches) {
           gsap.fromTo(
             bg,
             { scale: 1.12 },
@@ -578,7 +638,7 @@ export function Services({ wpImages }: { wpImages?: import('@/lib/wp/page-images
            scene is off screen — otherwise it keeps repainting for the rest of
            the session after the user has scrolled past. */
         const scanLine = panel.querySelector('[data-scanline]')
-        if (scanLine) {
+        if (scanLine && !prefersReducedMotion.matches) {
           const sweep = gsap.to(scanLine, {
             x: '100vw',
             duration: 3,
@@ -628,6 +688,16 @@ export function Services({ wpImages }: { wpImages?: import('@/lib/wp/page-images
          spacer while the class still says `sticky`, so the two mechanisms
          fought over the same element on every scroll tick. CSS sticky alone is
          compositor-driven and smooth. */
+
+      return () => {
+        cancelAnimationFrame(initialPlaybackSync)
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+        prefersReducedMotion.removeEventListener('change', onMotionPreferenceChange)
+        ScrollTrigger.removeEventListener('refresh', onScrollTriggerRefresh)
+        sectionObserver.disconnect()
+        playbackRequest += 1
+        videos.forEach((video) => video.pause())
+      }
     },
     { scope: sectionRef }
   )
