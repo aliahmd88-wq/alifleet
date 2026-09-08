@@ -70,7 +70,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
   const trust = [
     { icon: ShieldCheck, label: t.products.trustWarranty },
     { icon: Truck, label: t.products.trustShipping },
-    { icon: BadgeCheck, label: t.products.trustGenuine },
+    { icon: BadgeCheck, label: t.products.trustFitment },
   ]
 
   return (

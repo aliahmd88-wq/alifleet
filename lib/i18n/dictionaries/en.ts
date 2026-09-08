@@ -67,11 +67,10 @@ export const en = {
     heroView: 'View',
     stats: {
       eyebrow: 'By the numbers',
-      years: 'Years of experience',
-      vehicles: 'Vehicles delivered',
-      countries: 'Countries served',
+      customers: 'Customers served',
       parts: 'Parts in stock',
-      satisfaction: 'Client satisfaction',
+      brands: 'Truck brands covered',
+      markets: 'Import markets',
     },
     fleet: {
       eyebrow: 'The Fleet',
@@ -92,7 +91,7 @@ export const en = {
       luxuryDesc:
         'Hand-selected luxury SUVs and vehicles sourced from global markets, imported with full documentation.',
     },
-    globeCountries: '40+ Countries',
+    globeCountries: 'Europe · USA · Canada',
     globeTracking: 'Live Tracking',
     services: {
       eyebrow: 'Our Services',
@@ -128,9 +127,9 @@ export const en = {
       scene3Kicker: 'Spare Parts',
       scene3Title1: 'Every part,',
       scene3Title2: 'zero downtime',
-      scene3Desc: 'Genuine spare parts for Sprinters and light trucks — sourced, verified, and dispatched express to keep your fleet moving.',
+      scene3Desc: 'Aftermarket parts for DAF, MAN, Volvo, Mercedes, Scania and Iveco trucks — matched by part number and dispatched fast, so the truck gets back on the road.',
       callout1Label: 'Turbocharger',
-      callout2Label: 'OEM Filters',
+      callout2Label: 'Mirrors & Arms',
       callout3Label: 'Brake Systems',
       liveInventory: 'Live Inventory',
       inStock: 'In Stock',
@@ -148,9 +147,9 @@ export const en = {
   },
   products: {
     eyebrow: 'Spare Parts',
-    title: 'Genuine parts,',
-    titleEm: 'ready to ship',
-    lead: 'Original and OEM-grade spare parts for trucks, vans and luxury vehicles — verified fitment, warranty backed, dispatched worldwide.',
+    title: 'Aftermarket truck parts,',
+    titleEm: 'fairly priced',
+    lead: 'Replacement parts for DAF, MAN, Volvo, Mercedes, Scania and Iveco trucks — headlights, mirrors, bumpers, steps and body panels. We match by part number, quote a final price up front, and ship from Reine, Israel.',
     searchPlaceholder: 'Search by name, brand or part number…',
     categoriesLabel: 'Categories',
     categories: {
@@ -165,9 +164,9 @@ export const en = {
       body: 'Body & Cab',
       other: 'Other parts',
     },
-    trustWarranty: '12-month warranty',
-    trustShipping: 'Worldwide shipping',
-    trustGenuine: 'Genuine & OEM only',
+    trustWarranty: '3-month warranty',
+    trustShipping: 'Fast dispatch from Reine',
+    trustFitment: 'Final price up front',
     catalogUnavailable: 'The parts catalogue is temporarily unavailable',
     catalogUnavailableLead:
       'We could not reach the store just now. Please try again shortly, or contact us and we will check availability for you.',
@@ -589,7 +588,7 @@ export const en = {
   },
   footer: {
     tagline:
-      'Luxurious commercial vehicles, global importing, and genuine spare parts — delivered with excellence worldwide.',
+      'Vehicle and truck importing from Europe, the USA and Canada, plus aftermarket truck parts — from Reine, Israel, with customs clearance and licensing handled.',
     fleet: 'Fleet',
     fleetLinks: {
       trucks: 'Heavy-Duty Trucks',

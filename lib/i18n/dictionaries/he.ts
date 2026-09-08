@@ -69,11 +69,10 @@ export const he: Dictionary = {
     heroView: 'הצגה',
     stats: {
       eyebrow: 'במספרים',
-      years: 'שנות ניסיון',
-      vehicles: 'רכבים נמסרו',
-      countries: 'מדינות שירות',
+      customers: 'לקוחות מרוצים',
       parts: 'חלפים במלאי',
-      satisfaction: 'שביעות רצון לקוחות',
+      brands: 'יצרני משאיות',
+      markets: 'שווקי ייבוא',
     },
     fleet: {
       eyebrow: 'הצי',
@@ -94,7 +93,7 @@ export const he: Dictionary = {
       luxuryDesc:
         'רכבי שטח ויוקרה שנבחרו אישית משווקים גלובליים, מיובאים עם תיעוד מלא.',
     },
-    globeCountries: '40+ מדינות',
+    globeCountries: 'אירופה · ארה"ב · קנדה',
     globeTracking: 'מעקב חי',
     services: {
       eyebrow: 'השירותים שלנו',
@@ -127,9 +126,9 @@ export const he: Dictionary = {
       scene3Kicker: 'חלפים',
       scene3Title1: 'כל חלף,',
       scene3Title2: 'אפס השבתה',
-      scene3Desc: 'חלפים מקוריים לסברינטר ולמשאיות קלות — מסופקים, מאומתים ומשוגרים במהירות כדי לשמור על הצי שלכם תנועה.',
+      scene3Desc: 'חלפים חלופיים למשאיות DAF, MAN, וולוו, מרצדס, סקאניה ואיווקו — מאותרים לפי מספר חלק ונשלחים מהר, כדי שהמשאית תחזור לכביש.',
       callout1Label: 'טורבו',
-      callout2Label: 'פילטרים OEM',
+      callout2Label: 'מראות וזרועות',
       callout3Label: 'מערכות בלמים',
       liveInventory: 'מלאי חי',
       inStock: 'במלאי',
@@ -147,9 +146,9 @@ export const he: Dictionary = {
   },
   products: {
     eyebrow: 'חלפים',
-    title: 'חלפים מקוריים,',
-    titleEm: 'מוכנים למשלוח',
-    lead: 'חלפים מקוריים וברמת OEM למשאיות, ואנים ורכבי יוקרה — התאמה מאומתת, באחריות, ומשלוח לכל העולם.',
+    title: 'חלפים חלופיים למשאיות,',
+    titleEm: 'במחיר הוגן',
+    lead: 'חלפים חלופיים ל-DAF, MAN, וולוו, מרצדס, סקאניה ואיווקו — פנסים, מראות, פגושים, מדרגות וחלקי מרכב. אנחנו מאתרים לפי מספר חלק, נותנים מחיר סופי מראש ושולחים מריינה.',
     searchPlaceholder: 'חיפוש לפי שם, מותג או מספר פריט…',
     categoriesLabel: 'קטגוריות',
     categories: {
@@ -164,9 +163,9 @@ export const he: Dictionary = {
       body: 'מרכב ותא נהג',
       other: 'חלפים נוספים',
     },
-    trustWarranty: 'אחריות 12 חודשים',
-    trustShipping: 'משלוח עולמי',
-    trustGenuine: 'מקורי ו-OEM בלבד',
+    trustWarranty: 'אחריות 3 חודשים',
+    trustShipping: 'משלוח מהיר מריינה',
+    trustFitment: 'מחיר סופי מראש',
     catalogUnavailable: 'קטלוג החלפים אינו זמין כרגע',
     catalogUnavailableLead:
       'לא הצלחנו להתחבר לחנות ברגע זה. נסו שוב בעוד רגע, או פנו אלינו ונבדוק זמינות עבורכם.',
@@ -582,7 +581,7 @@ export const he: Dictionary = {
   },
   footer: {
     tagline:
-      'רכבים מסחריים יוקרתיים, ייבוא גלובלי וחלפים מקוריים — באיכות מעולה בכל העולם.',
+      'ייבוא רכבים ומשאיות מאירופה, ארה"ב וקנדה, וחלפים חלופיים למשאיות — מריינה, עם שחרור מכס ורישוי.',
     fleet: 'הצי',
     fleetLinks: {
       trucks: 'משאיות כבדות',

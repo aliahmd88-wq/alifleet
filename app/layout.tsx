@@ -164,6 +164,7 @@ export default async function RootLayout({
                 storeSettings.social.instagram,
                 storeSettings.social.facebook,
                 storeSettings.social.linkedin,
+                storeSettings.social.tiktok,
               ].filter(Boolean),
             }),
           }}
