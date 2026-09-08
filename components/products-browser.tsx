@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Search, ShieldCheck, Truck, BadgeCheck, X } from 'lucide-react'
 import { Paginator } from '@/components/paginator'
 import { partCategories, type PartCategory, type PartSummary } from '@/lib/data/parts'
+import { buildHaystack, matchesQuery } from '@/lib/search/match'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { ProductCard } from '@/components/product-card'
 
@@ -24,23 +25,27 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
     return partCategories.filter((key) => present.has(key))
   }, [parts])
 
+  // One word list per product, built once: names in all three languages,
+  // brand and SKU. matchesQuery() handles word order, prefixes and synonyms.
+  const haystacks = useMemo(
+    () =>
+      new Map(
+        parts.map((part) => [
+          part,
+          buildHaystack([part.name.ar, part.name.he, part.name.en, part.brand, part.sku]),
+        ])
+      ),
+    [parts]
+  )
+
   const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase()
+    const needle = query.trim()
     const filtered = parts.filter((part) => {
       if (category !== 'all' && part.category !== category) return false
       if (!needle) return true
       // Every locale is searched, not just the active one: a customer who knows
       // the Hebrew name of a part must still find it while browsing in Arabic.
-      const haystack = [
-        part.name.ar,
-        part.name.he,
-        part.name.en,
-        part.brand,
-        part.sku,
-      ]
-        .join(' ')
-        .toLowerCase()
-      return haystack.includes(needle)
+      return matchesQuery(haystacks.get(part) ?? [], needle)
     })
 
     const sorted = [...filtered]
@@ -53,7 +58,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
         (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
       )
     return sorted
-  }, [parts, query, category, sort, locale])
+  }, [parts, haystacks, query, category, sort, locale])
 
   // Reset to page 1 whenever the filtered set changes
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))

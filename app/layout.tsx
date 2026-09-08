@@ -10,6 +10,7 @@ import {
 import './globals.css'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { BackToTop } from '@/components/back-to-top'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 import { SiteLoader } from '@/components/site-loader'
 import { LanguageProvider } from '@/lib/i18n/language-context'
 import { CartProvider } from '@/lib/cart-context'
@@ -171,6 +172,29 @@ export default async function RootLayout({
                 storeSettings.social.linkedin,
                 storeSettings.social.tiktok,
               ].filter(Boolean),
+              areaServed: { '@type': 'Country', name: 'Israel' },
+              knowsLanguage: ['he', 'ar', 'en'],
+              priceRange: '₪₪',
+              contactPoint: storeSettings.whatsapp
+                ? [
+                    {
+                      '@type': 'ContactPoint',
+                      contactType: 'sales',
+                      telephone: `+${storeSettings.whatsapp}`,
+                      url: `https://wa.me/${storeSettings.whatsapp}`,
+                      availableLanguage: ['he', 'ar', 'en'],
+                    },
+                  ]
+                : undefined,
+              // Open every day except Friday.
+              openingHoursSpecification: [
+                {
+                  '@type': 'OpeningHoursSpecification',
+                  dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Saturday'],
+                  opens: '09:00',
+                  closes: '18:00',
+                },
+              ],
             }),
           }}
         />
@@ -180,6 +204,8 @@ export default async function RootLayout({
           <StoreProvider settings={storeSettings}>
             <AuthProvider viewer={viewer} backendReady={isWpConfigured()}>
               <CartProvider>{children}</CartProvider>
+              {/* Needs the store (number) and language (label) providers above. */}
+              <WhatsAppButton />
             </AuthProvider>
           </StoreProvider>
         </LanguageProvider>

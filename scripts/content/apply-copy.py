@@ -78,11 +78,39 @@ def write_seo(lines, seo, locale):
     lines[j + 1:j + 1] = block
 
 
+def emit_section(name, node, locale, indent=2):
+    """Render a nested section as TS object-literal lines. A leaf is a {he, ar, en} dict."""
+    pad = ' ' * indent
+    out = [f'{pad}{name}: {{']
+    for key, value in node.items():
+        if key.startswith('_'):
+            continue
+        if isinstance(value, dict) and set(value.keys()) >= set(LOCALES):
+            out.append(f"{pad}  {key}: '{esc(value[locale])}',")
+        else:
+            out.extend(emit_section(key, value, locale, indent + 2))
+    out.append(f'{pad}}},')
+    return out
+
+
+def write_section(lines, name, node, locale):
+    existing = [k for k, l in enumerate(lines) if l.startswith(f'  {name}: {{')]
+    if existing:
+        i = existing[0]
+        del lines[i:block_end(lines, i, 2) + 1]
+    i = next(k for k, l in enumerate(lines) if l.startswith('  footer: {'))
+    j = block_end(lines, i, 2)
+    lines[j + 1:j + 1] = emit_section(name, node, locale)
+
+
 for locale in LOCALES:
     path = pathlib.Path(f'lib/i18n/dictionaries/{locale}.ts')
     lines = path.read_text(encoding='utf-8').split('\n')
-    for key_path, values in batch['strings'].items():
+    for key_path, values in batch.get('strings', {}).items():
         set_value(lines, key_path, values[locale])
-    write_seo(lines, batch['seo'], locale)
+    if 'seo' in batch:
+        write_seo(lines, batch['seo'], locale)
+    for name, node in batch.get('sections', {}).items():
+        write_section(lines, name, node, locale)
     path.write_text('\n'.join(lines), encoding='utf-8')
-    print(f"{locale}.ts: {len(batch['strings'])} strings set, seo section written")
+    print(f"{locale}.ts: {len(batch.get('strings', {}))} strings set; sections: {', '.join(list(batch.get('sections', {}).keys()) + (['seo'] if 'seo' in batch else []))}")
