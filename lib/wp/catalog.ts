@@ -349,11 +349,12 @@ function mapProduct(
     en: acf?.nameEn,
   })
 
-  // The short description is the product blurb; the long one is the fallback
+  // The long description carries the fitment and 'also known as' lines that
+  // matter for search; the short blurb is only a fallback
   // because plenty of WooCommerce products only fill in the latter.
   const hebrewDescription =
-    stripHtml(product.shortDescription ?? '') ||
-    stripHtml(product.description ?? '')
+    stripHtml(product.description ?? '') ||
+    stripHtml(product.shortDescription ?? '')
   const description = localizeHebrew(hebrewDescription, {
     ar: acf?.descriptionAr,
     en: acf?.descriptionEn,
