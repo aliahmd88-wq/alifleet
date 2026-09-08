@@ -161,6 +161,7 @@ export const he: Dictionary = {
       filters: 'מסננים',
       suspension: 'מתלים',
       electrical: 'חשמל',
+      body: 'מרכב ותא נהג',
       other: 'חלפים נוספים',
     },
     trustWarranty: 'אחריות 12 חודשים',

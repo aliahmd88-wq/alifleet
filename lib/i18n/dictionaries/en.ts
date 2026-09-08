@@ -162,6 +162,7 @@ export const en = {
       filters: 'Filters',
       suspension: 'Suspension',
       electrical: 'Electrical',
+      body: 'Body & Cab',
       other: 'Other parts',
     },
     trustWarranty: '12-month warranty',

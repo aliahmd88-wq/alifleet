@@ -19,7 +19,9 @@ export type PartCategory =
   | 'filters'
   | 'suspension'
   | 'electrical'
-  /** Anything WooCommerce has not been filed under one of the eight above. */
+  /** Cab and body panels: steps, grilles, mirrors, bumpers, covers, handles. */
+  | 'body'
+  /** Anything WooCommerce has not been filed under one of the nine above. */
   | 'other'
 
 /**
@@ -64,6 +66,7 @@ export const partCategories: PartCategory[] = [
   'filters',
   'suspension',
   'electrical',
+  'body',
   'other',
 ]
 

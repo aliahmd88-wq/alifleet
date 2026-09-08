@@ -161,6 +161,7 @@ export const ar: Dictionary = {
       filters: 'الفلاتر',
       suspension: 'نظام التعليق',
       electrical: 'الكهرباء',
+      body: 'الهيكل والمقصورة',
       other: 'قطع أخرى',
     },
     trustWarranty: 'ضمان 12 شهرًا',

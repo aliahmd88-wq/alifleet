@@ -327,7 +327,7 @@ function parsePrice(raw: string | null | undefined): number {
 }
 
 /**
- * Keyword map for products that were never filed under one of the eight
+ * Keyword map for products that were never filed under one of the nine
  * frontend categories. It reads the WooCommerce category names first — those
  * are what the shop owner actually chose — and only then the product title.
  */
@@ -340,6 +340,7 @@ const CATEGORY_KEYWORDS: Record<Exclude<PartCategory, 'other'>, string[]> = {
   filters: ['מסנן', 'מסננים', 'פילטר', 'filter'],
   suspension: ['מתלה', 'מתלים', 'קפיץ', 'בולם', 'זרוע', 'suspension', 'shock', 'spring', 'strut', 'arm'],
   electrical: ['חשמל', 'אלטרנטור', 'מצבר', 'סטרטר', 'חיישן', 'alternator', 'battery', 'starter', 'sensor', 'relay', 'coil'],
+  body: ['מדרגה', 'מדרגת', 'גריל', 'מראה', 'מראת', 'פגוש', 'משקפים', 'מסית רוח', 'מסיט רוח', 'כנף', 'לוח', 'מכסה', 'כיסוי', 'ידית', 'מגן שמש', 'מגן בוץ', 'מגן פוטס', 'סמל', 'step', 'grille', 'mirror', 'bumper', 'panel', 'cover', 'handle', 'visor', 'deflector', 'emblem', 'badge', 'fender', 'mud guard'],
 }
 
 function resolveCategory(

@@ -1,0 +1,602 @@
+{
+  "_about": "Canonical part types for the AliFleet catalogue. `titles` maps the exact WordPress (Hebrew) product title to a type id and optional qualifier; `types` carries the wording in the three site languages plus the ACF part_category. Used by scripts/products/build-review-sheet.py and apply-products.php.",
+  "brands": {
+    "Daf": {
+      "he": "דאף",
+      "ar": "داف",
+      "en": "DAF"
+    },
+    "Man": {
+      "he": "מאן",
+      "ar": "مان",
+      "en": "MAN"
+    },
+    "Volvo": {
+      "he": "וולוו",
+      "ar": "فولفو",
+      "en": "Volvo"
+    },
+    "Scania": {
+      "he": "סקניה",
+      "ar": "سكانيا",
+      "en": "Scania"
+    },
+    "Mercedes": {
+      "he": "מרצדס",
+      "ar": "مرسيدس",
+      "en": "Mercedes"
+    },
+    "Iveco": {
+      "he": "איווקו",
+      "ar": "إيفيكو",
+      "en": "Iveco"
+    }
+  },
+  "sides": {
+    "R": {
+      "he": "ימין",
+      "ar": "يمين",
+      "en": "Right"
+    },
+    "L": {
+      "he": "שמאל",
+      "ar": "يسار",
+      "en": "Left"
+    }
+  },
+  "types": {
+    "headlight": {
+      "he": "פנס קדמי",
+      "ar": "مصباح أمامي",
+      "en": "Headlight",
+      "cat": "lighting"
+    },
+    "headlight_xenon": {
+      "he": "פנס קדמי קסנון",
+      "ar": "مصباح أمامي زينون",
+      "en": "Xenon Headlight",
+      "cat": "lighting"
+    },
+    "headlight_led": {
+      "he": "פנס קדמי LED",
+      "ar": "مصباح أمامي LED",
+      "en": "LED Headlight",
+      "cat": "lighting"
+    },
+    "tail_light": {
+      "he": "פנס אחורי",
+      "ar": "مصباح خلفي",
+      "en": "Tail Light",
+      "cat": "lighting"
+    },
+    "tail_light_lens": {
+      "he": "כיסוי פלסטיק לפנס אחורי",
+      "ar": "غطاء بلاستيك لمصباح خلفي",
+      "en": "Tail Light Lens Cover",
+      "cat": "lighting"
+    },
+    "fog_light": {
+      "he": "פנס ערפל קדמי",
+      "ar": "مصباح ضباب أمامي",
+      "en": "Front Fog Light",
+      "cat": "lighting"
+    },
+    "fog_light_led": {
+      "he": "פנס ערפל קדמי LED",
+      "ar": "مصباح ضباب أمامي LED",
+      "en": "LED Front Fog Light",
+      "cat": "lighting"
+    },
+    "roof_light": {
+      "he": "פנס עליון לתא הנהג",
+      "ar": "مصباح علوي للمقصورة",
+      "en": "Cab Roof Light",
+      "cat": "lighting"
+    },
+    "headlight_bracket": {
+      "he": "תושבת פנס קדמי",
+      "ar": "حامل مصباح أمامي",
+      "en": "Headlight Bracket",
+      "cat": "lighting"
+    },
+    "headlight_frame": {
+      "he": "מסגרת פנס קדמי",
+      "ar": "إطار مصباح أمامي",
+      "en": "Headlight Frame",
+      "cat": "lighting"
+    },
+    "headlight_cover": {
+      "he": "כיסוי פנס קדמי",
+      "ar": "غطاء مصباح أمامي",
+      "en": "Headlight Cover",
+      "cat": "lighting"
+    },
+    "cab_step": {
+      "he": "מדרגה לתא הנהג",
+      "ar": "درجة صعود للمقصورة",
+      "en": "Cab Step",
+      "cat": "body"
+    },
+    "lower_step": {
+      "he": "מדרגה תחתונה",
+      "ar": "درجة سفلية",
+      "en": "Lower Step",
+      "cat": "body"
+    },
+    "side_step": {
+      "he": "מדרגת צד",
+      "ar": "درجة جانبية",
+      "en": "Side Step",
+      "cat": "body"
+    },
+    "access_step": {
+      "he": "מדרגת גישה",
+      "ar": "درجة صعود",
+      "en": "Access Step",
+      "cat": "body"
+    },
+    "bumper_step": {
+      "he": "מדרגה קדמית לפגוש",
+      "ar": "درجة أمامية للصدام",
+      "en": "Front Bumper Step",
+      "cat": "body"
+    },
+    "step_tread": {
+      "he": "מדרס מדרגה",
+      "ar": "نعل درجة",
+      "en": "Step Tread",
+      "cat": "body"
+    },
+    "step_wall": {
+      "he": "קיר תמיכה למדרגה",
+      "ar": "جدار دعم الدرجة",
+      "en": "Step Support Wall",
+      "cat": "body"
+    },
+    "mud_guard": {
+      "he": "מגן בוץ קדמי",
+      "ar": "واقي طين أمامي",
+      "en": "Front Mud Guard",
+      "cat": "body"
+    },
+    "mirror_electric": {
+      "he": "מראה צד חשמלית",
+      "ar": "مرآة جانبية كهربائية",
+      "en": "Electric Side Mirror",
+      "cat": "body"
+    },
+    "mirror_front": {
+      "he": "מראה קדמית",
+      "ar": "مرآة أمامية",
+      "en": "Front Mirror",
+      "cat": "body"
+    },
+    "mirror": {
+      "he": "מראה",
+      "ar": "مرآة",
+      "en": "Mirror",
+      "cat": "body"
+    },
+    "mirror_kit": {
+      "he": "ערכת מראה",
+      "ar": "طقم مرآة",
+      "en": "Mirror Kit",
+      "cat": "body"
+    },
+    "door_mirror": {
+      "he": "מראת דלת",
+      "ar": "مرآة باب",
+      "en": "Door Mirror",
+      "cat": "body"
+    },
+    "corner_panel_front": {
+      "he": "פינת כנף קדמית (מסיט רוח)",
+      "ar": "زاوية أمامية (كاسر هواء)",
+      "en": "Front Corner Panel (Wind Deflector)",
+      "cat": "body"
+    },
+    "corner_panel_outer": {
+      "he": "מסיט רוח חיצוני",
+      "ar": "كاسر هواء خارجي",
+      "en": "Outer Wind Deflector Panel",
+      "cat": "body"
+    },
+    "corner_panel_inner": {
+      "he": "מסיט רוח פנימי",
+      "ar": "كاسر هواء داخلي",
+      "en": "Inner Wind Deflector Panel",
+      "cat": "body"
+    },
+    "corner_panel_cover": {
+      "he": "כיסוי מסיט רוח קדמי",
+      "ar": "غطاء كاسر هواء أمامي",
+      "en": "Front Wind Deflector Cover",
+      "cat": "body"
+    },
+    "bumper_front": {
+      "he": "פגוש קדמי",
+      "ar": "صدام أمامي",
+      "en": "Front Bumper",
+      "cat": "body"
+    },
+    "bumper_front_large": {
+      "he": "פגוש קדמי גדול",
+      "ar": "صدام أمامي كبير",
+      "en": "Large Front Bumper",
+      "cat": "body"
+    },
+    "bumper_corner": {
+      "he": "פינת פגוש קדמי",
+      "ar": "زاوية صدام أمامي",
+      "en": "Front Bumper Corner",
+      "cat": "body"
+    },
+    "bumper_corner_cover": {
+      "he": "כיסוי פינת פגוש קדמי",
+      "ar": "غطاء زاوية صدام أمامي",
+      "en": "Front Bumper Corner Cover",
+      "cat": "body"
+    },
+    "bumper_cover": {
+      "he": "כיסוי פגוש קדמי",
+      "ar": "غطاء صدام أمامي",
+      "en": "Front Bumper Cover",
+      "cat": "body"
+    },
+    "bumper_fog_cover": {
+      "he": "כיסוי פנס ערפל לפגוש קדמי",
+      "ar": "غطاء مصباح ضباب للصدام الأمامي",
+      "en": "Front Bumper Fog Light Cover",
+      "cat": "body"
+    },
+    "bumper_center": {
+      "he": "חלק פנימי מרכזי לפגוש",
+      "ar": "الجزء الداخلي الأوسط للصدام",
+      "en": "Bumper Centre Inner Section",
+      "cat": "body"
+    },
+    "grille_front": {
+      "he": "גריל קדמי",
+      "ar": "شبك أمامي",
+      "en": "Front Grille",
+      "cat": "body"
+    },
+    "grille_lower": {
+      "he": "גריל תחתון",
+      "ar": "شبك سفلي",
+      "en": "Lower Grille",
+      "cat": "body"
+    },
+    "front_panel_grille": {
+      "he": "לוח קדמי (מכסה מנוע)",
+      "ar": "لوح أمامي (غطاء المحرك)",
+      "en": "Cab Front Panel",
+      "cat": "body"
+    },
+    "emblem": {
+      "he": "סמל קדמי",
+      "ar": "شعار أمامي",
+      "en": "Front Emblem",
+      "cat": "body"
+    },
+    "door_handle": {
+      "he": "ידית דלת",
+      "ar": "مقبض باب",
+      "en": "Door Handle",
+      "cat": "body"
+    },
+    "sun_visor": {
+      "he": "מגן שמש קדמי",
+      "ar": "واقية شمس أمامية",
+      "en": "Front Sun Visor",
+      "cat": "body"
+    },
+    "coolant_tank": {
+      "he": "מיכל עיבוי (מיכל מים)",
+      "ar": "خزان تمدد سائل التبريد",
+      "en": "Coolant Expansion Tank",
+      "cat": "engine"
+    },
+    "battery_cover": {
+      "he": "מכסה מצברים",
+      "ar": "غطاء البطاريات",
+      "en": "Battery Cover",
+      "cat": "electrical"
+    },
+    "air_filter_cover": {
+      "he": "מכסה מסנן אוויר",
+      "ar": "غطاء فلتر الهواء",
+      "en": "Air Filter Cover",
+      "cat": "filters"
+    },
+    "wiper_panel": {
+      "he": "לוח מגבים",
+      "ar": "لوح المساحات",
+      "en": "Wiper Panel",
+      "cat": "body"
+    },
+    "corner_panel": {
+      "he": "לוח פינה",
+      "ar": "لوح زاوية",
+      "en": "Corner Panel",
+      "cat": "body"
+    },
+    "lower_front_panel": {
+      "he": "לוח קדמי תחתון",
+      "ar": "لوح أمامي سفلي",
+      "en": "Lower Front Panel",
+      "cat": "body"
+    },
+    "panel": {
+      "he": "לוח",
+      "ar": "لوح",
+      "en": "Panel",
+      "cat": "body"
+    }
+  },
+  "qualifiers": {
+    "manual_adjust": {
+      "he": "מתכוונן ידנית",
+      "ar": "بضبط يدوي",
+      "en": "Manually Adjustable"
+    },
+    "with_lock": {
+      "he": "עם מנעול",
+      "ar": "بقفل",
+      "en": "with Lock"
+    },
+    "twelve_ton": {
+      "he": "12 טון",
+      "ar": "12 طن",
+      "en": "12-Tonne"
+    },
+    "centre": {
+      "he": "מרכזי",
+      "ar": "أوسط",
+      "en": "Centre"
+    }
+  },
+  "titles": {
+    "פנס קדמי חזית ליד": {
+      "type": "headlight"
+    },
+    "פנס קדמי חזית": {
+      "type": "headlight"
+    },
+    "פנס קדמי": {
+      "type": "headlight"
+    },
+    "פנס קדמי חזית איווקו": {
+      "type": "headlight"
+    },
+    "פנס קדמי חזית ליד חצי": {
+      "type": "headlight",
+      "q": "manual_adjust"
+    },
+    "פנס קסנון ימין": {
+      "type": "headlight_xenon"
+    },
+    "פנס קסנון שמאל": {
+      "type": "headlight_xenon"
+    },
+    "פנס לד ימין": {
+      "type": "headlight_led"
+    },
+    "פנס לד שמאל": {
+      "type": "headlight_led"
+    },
+    "פנס איתות אחורי בקלית": {
+      "type": "tail_light"
+    },
+    "פנס איתות אחורי בקלית ליד": {
+      "type": "tail_light"
+    },
+    "מכסה פלסטיק לבקלית אחורית": {
+      "type": "tail_light_lens"
+    },
+    "פנס ערפל קדמי": {
+      "type": "fog_light"
+    },
+    "פנס ערפל במגן קדמי לדים": {
+      "type": "fog_light_led"
+    },
+    "פנס זרקור פנס עזר ערפל עליון": {
+      "type": "roof_light"
+    },
+    "תושבת פנס קדמי חזית": {
+      "type": "headlight_bracket"
+    },
+    "מסגרת פנס ימין": {
+      "type": "headlight_frame"
+    },
+    "מסגרת פנס שמאל": {
+      "type": "headlight_frame"
+    },
+    "כיסוי פנס קמי": {
+      "type": "headlight_cover"
+    },
+    "מדרגה": {
+      "type": "cab_step"
+    },
+    "מדרגה דאף": {
+      "type": "cab_step"
+    },
+    "מדרגה תחתונה": {
+      "type": "lower_step"
+    },
+    "מדרגת צד ימין": {
+      "type": "side_step"
+    },
+    "מדרגת צד שמאל": {
+      "type": "side_step"
+    },
+    "מדרגת גישה ימין": {
+      "type": "access_step"
+    },
+    "מדרגת גישה שמאל": {
+      "type": "access_step"
+    },
+    "מדרגה קדמית לפגוש": {
+      "type": "bumper_step"
+    },
+    "מדרס מדרגה": {
+      "type": "step_tread"
+    },
+    "קיר תמיכת מדרגה ימין": {
+      "type": "step_wall"
+    },
+    "קיר תמיכת מדרגה שמאל": {
+      "type": "step_wall"
+    },
+    "מגן פוטס": {
+      "type": "mud_guard"
+    },
+    "מראה צד חשמלית": {
+      "type": "mirror_electric"
+    },
+    "מראה קדמית": {
+      "type": "mirror_front"
+    },
+    "מראה": {
+      "type": "mirror"
+    },
+    "ערכת מראה": {
+      "type": "mirror_kit"
+    },
+    "מראת דלת": {
+      "type": "door_mirror"
+    },
+    "מסית רוח כנף קדמי": {
+      "type": "corner_panel_front"
+    },
+    "מסית רוח חיצוני": {
+      "type": "corner_panel_outer"
+    },
+    "מסית רוח חיצוני מאן": {
+      "type": "corner_panel_outer"
+    },
+    "מסית רוח חיצוני דאף": {
+      "type": "corner_panel_outer"
+    },
+    "מסית רוח פנימי": {
+      "type": "corner_panel_inner"
+    },
+    "מכסה מסית רוח קנף קדמי": {
+      "type": "corner_panel_cover"
+    },
+    "פגוש קדמי": {
+      "type": "bumper_front"
+    },
+    "פגוש קדמי דאף": {
+      "type": "bumper_front"
+    },
+    "פגוש קדמי גדול": {
+      "type": "bumper_front_large"
+    },
+    "משקפים": {
+      "type": "bumper_corner"
+    },
+    "מעריך פגוש קדמי דאף": {
+      "type": "bumper_corner"
+    },
+    "חתיכת פינת פגוש ימין": {
+      "type": "bumper_corner"
+    },
+    "חתיכת פינת פגוש שמאל": {
+      "type": "bumper_corner"
+    },
+    "לוח פינת פגוש ימין": {
+      "type": "bumper_corner"
+    },
+    "מכסה משקפים": {
+      "type": "bumper_corner_cover"
+    },
+    "כיסוי פגוש קדמי דאף": {
+      "type": "bumper_cover"
+    },
+    "כיסוי ערפל לפגוש קדמי דאף 12 טון": {
+      "type": "bumper_fog_cover",
+      "q": "twelve_ton"
+    },
+    "חלק פנימי מרכזי של פגוש": {
+      "type": "bumper_center"
+    },
+    "גריל קדמי דאף": {
+      "type": "grille_front"
+    },
+    "גריל": {
+      "type": "grille_front"
+    },
+    "גריל תחתון": {
+      "type": "grille_lower"
+    },
+    "מכסה מנוע גריל מאן": {
+      "type": "front_panel_grille"
+    },
+    "סמל קדמי חזית מאן": {
+      "type": "emblem"
+    },
+    "ידית פתיחת דלת עם מפתיח": {
+      "type": "door_handle",
+      "q": "with_lock"
+    },
+    "ידית דלת שמאל": {
+      "type": "door_handle"
+    },
+    "מגן שמש קדמי": {
+      "type": "sun_visor"
+    },
+    "מיכל עיפוי": {
+      "type": "coolant_tank"
+    },
+    "מכסה מצברים": {
+      "type": "battery_cover"
+    },
+    "מכסה מסנן אוויר": {
+      "type": "air_filter_cover"
+    },
+    "לוח מגב ימין": {
+      "type": "wiper_panel"
+    },
+    "לוח מגב שמאל": {
+      "type": "wiper_panel"
+    },
+    "לוח מגב מרכזי": {
+      "type": "wiper_panel",
+      "q": "centre"
+    },
+    "לוח פינה ימין": {
+      "type": "corner_panel"
+    },
+    "לוח קדמי תחתון": {
+      "type": "lower_front_panel"
+    },
+    "לוח": {
+      "type": "panel"
+    }
+  },
+  "en_fallback": {
+    "_about": "For products whose Hebrew title is '#N/A': first keyword found in the existing English name wins (order matters).",
+    "Coolant": "coolant_tank",
+    "Tank": "coolant_tank",
+    "Bumper Corner": "bumper_corner",
+    "Corner": "bumper_corner",
+    "Tail Light Lens": "tail_light_lens",
+    "Lens": "tail_light_lens",
+    "Tail Light": "tail_light",
+    "Marker": "roof_light",
+    "Fog": "fog_light",
+    "Bracket": "headlight_bracket",
+    "Frame": "headlight_frame",
+    "Guard": "headlight_cover",
+    "Headlight": "headlight",
+    "Step": "cab_step",
+    "Mirror": "mirror",
+    "Bumper": "bumper_front",
+    "Grille": "grille_front",
+    "Handle": "door_handle",
+    "Visor": "sun_visor",
+    "Panel": "panel",
+    "Cover": "bumper_cover"
+  }
+}
