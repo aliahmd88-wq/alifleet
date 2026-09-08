@@ -1,4 +1,25 @@
 /**
+ * Small, fast, synchronous string hash (cyrb53) used to let customers search
+ * by a part's original (OE) number without shipping the number itself: the
+ * server hashes the OE number, the browser hashes what the customer typed,
+ * and only the two hashes are compared. Not cryptographic; it only keeps the
+ * numbers out of the page source.
+ */
+export function hashToken(value: string): string {
+  const str = value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+  let h1 = 0xdeadbeef ^ 53
+  let h2 = 0x41c6ce57 ^ 53
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
+}
+
+/**
  * Catalogue search that behaves the way customers type.
  *
  * - The query is split into words; every word must match, in any order.
@@ -116,9 +137,20 @@ export function buildHaystack(fields: Array<string | null | undefined>): string[
   return tokenize(fields.filter(Boolean).join(' '))
 }
 
-export function matchesQuery(haystack: string[], query: string): boolean {
+/**
+ * `hashes` are cyrb53 hashes of hidden search keys (the OE number). A query
+ * matches on hashes when the whole query with separators removed, or any
+ * single token, hashes to one of them, so "81.615.100.570" and
+ * "81615100570" both find the part while the number itself never leaves the
+ * server.
+ */
+export function matchesQuery(haystack: string[], query: string, hashes: readonly string[] = []): boolean {
   const tokens = tokenize(query)
   if (tokens.length === 0) return true
+  if (hashes.length > 0) {
+    const whole = hashToken(query)
+    if (hashes.includes(whole) || tokens.some((token) => hashes.includes(hashToken(token)))) return true
+  }
   return tokens.every((token) => {
     const variants = expandToken(token)
     // One-letter variants would match almost anything; keep them exact.

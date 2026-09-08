@@ -47,6 +47,10 @@ export type PartSummary = {
    * can mark it up with `lang="he"` instead of lying about the language.
    */
   untranslated?: boolean
+  /** Hidden search words (synonyms, models); never rendered. */
+  searchTerms?: string
+  /** Hashes of hidden search keys such as the OE number; see lib/search/match. */
+  searchHashes?: string[]
 }
 
 /** A full product, as needed by the detail page. */
@@ -92,5 +96,7 @@ export function toSummary(part: Part): PartSummary {
     alt: part.alt,
     name: part.name,
     untranslated: part.untranslated,
+    searchTerms: part.searchTerms,
+    searchHashes: part.searchHashes,
   }
 }

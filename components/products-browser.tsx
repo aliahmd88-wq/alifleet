@@ -32,7 +32,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
       new Map(
         parts.map((part) => [
           part,
-          buildHaystack([part.name.ar, part.name.he, part.name.en, part.brand, part.sku]),
+          buildHaystack([part.name.ar, part.name.he, part.name.en, part.brand, part.sku, part.searchTerms]),
         ])
       ),
     [parts]
@@ -45,7 +45,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
       if (!needle) return true
       // Every locale is searched, not just the active one: a customer who knows
       // the Hebrew name of a part must still find it while browsing in Arabic.
-      return matchesQuery(haystacks.get(part) ?? [], needle)
+      return matchesQuery(haystacks.get(part) ?? [], needle, part.searchHashes)
     })
 
     const sorted = [...filtered]
