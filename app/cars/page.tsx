@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CarsHero } from '@/components/cars-hero'
@@ -10,10 +12,14 @@ import { getVehicles } from '@/lib/wp/vehicles'
 import { getSaleCars } from '@/lib/wp/sale-cars'
 import { getCarsPageCopy } from '@/lib/wp/cars-page'
 
-export const metadata: Metadata = {
-  title: 'Cars | ALI FLEET',
-  description:
-    'Cars for sale from our own yard, plus vehicle import from Germany, the UAE, the USA, Japan, Korea and Belgium — sourcing, inspection, shipping and customs handled end to end.',
+/** Title and description follow the visitor's language (see t.seo). */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getDictionary(await getRequestLocale())
+  return {
+    title: t.seo.carsTitle,
+    description: t.seo.carsDescription,
+    alternates: { canonical: '/cars/' },
+  }
 }
 
 /**
