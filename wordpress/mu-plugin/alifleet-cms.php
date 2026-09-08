@@ -30,12 +30,11 @@ if ( ! defined( 'ALIFLEET_ALLOWED_ORIGINS' ) ) {
 	define(
 		'ALIFLEET_ALLOWED_ORIGINS',
 		[
-							'https://alifleet.com',
-				'https://www.alifleet.com',
-  'http://rbzfx3doqcg2vx1hyichhewe.169.58.176.172.sslip.io',
-  'https://sb-6h9l3x6zv41u.vercel.run',
-  'http://localhost:3000',
-
+			// Only hosts this deployment serves. Old sandbox / sslip.io origins were
+			// removed: an expired sandbox hostname can be re-registered by anyone.
+			'https://alifleet.com',
+			'https://www.alifleet.com',
+			'http://localhost:3000',
 		]
 	);
 }
@@ -2107,6 +2106,29 @@ add_filter(
 	10,
 	2
 );
+
+/* -------------------------------------------------------------------------
+ * Security: backend surface
+ * ---------------------------------------------------------------------- */
+// The public GraphQL API never needs the WordPress user directory: anonymous
+// callers see user objects as private (login names stay hidden). Logged-in
+// sessions keep the normal model rules so `viewer` and account operations work.
+add_filter(
+	'graphql_object_visibility',
+	static function ( $visibility, $model_name, $data, $owner, $current_user ) {
+		unset( $data, $owner );
+		if ( 'UserObject' === $model_name && ( ! isset( $current_user->ID ) || 0 === (int) $current_user->ID ) ) {
+			return 'private';
+		}
+		return $visibility;
+	},
+	10,
+	5
+);
+
+// This WordPress is a backend; its own pages must not be advertised to search
+// engines through the core sitemap (the storefront publishes its own).
+add_filter( 'wp_sitemaps_enabled', '__return_false' );
 
 /* -------------------------------------------------------------------------
  * Security: REST hardening
