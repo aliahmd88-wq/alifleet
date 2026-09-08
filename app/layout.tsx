@@ -24,6 +24,7 @@ import { isWpConfigured } from '@/lib/wp/config'
 import { localeMeta } from '@/lib/i18n/config'
 import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { getDictionary } from '@/lib/i18n/dictionaries'
+import { pageAlternates } from '@/lib/seo/alternates'
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -51,7 +52,8 @@ const SITE_NAME = 'ALI FLEET'
 
 /** Site title and description follow the visitor's language (t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const t = getDictionary(await getRequestLocale())
+  const locale = await getRequestLocale()
+  const t = getDictionary(locale)
   const SITE_TITLE = t.seo.siteTitle
   const SITE_DESCRIPTION = t.seo.siteDescription
   return {
@@ -66,9 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: SITE_DESCRIPTION,
     applicationName: SITE_NAME,
-    alternates: {
-      canonical: '/',
-    },
+    alternates: pageAlternates('/', locale),
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
@@ -151,7 +151,9 @@ export default async function RootLayout({
             __html: serializeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'AutoPartsStore',
-              name: SITE_NAME,
+              name: t.seo.orgName,
+              alternateName: t.seo.orgAlternateName,
+              inLanguage: locale,
               description: t.seo.siteDescription,
               url: siteUrl(),
               image: `${siteUrl()}/images/fleet-truck.png`,
@@ -172,7 +174,7 @@ export default async function RootLayout({
                 storeSettings.social.linkedin,
                 storeSettings.social.tiktok,
               ].filter(Boolean),
-              areaServed: { '@type': 'Country', name: 'Israel' },
+              areaServed: { '@type': 'Country', name: t.seo.areaServed },
               knowsLanguage: ['he', 'ar', 'en'],
               priceRange: '₪₪',
               contactPoint: storeSettings.whatsapp

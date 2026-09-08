@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getDictionary } from '@/lib/i18n/dictionaries'
+import { pageAlternates } from '@/lib/seo/alternates'
 import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
@@ -14,11 +15,12 @@ import { getCarsPageCopy } from '@/lib/wp/cars-page'
 
 /** Title and description follow the visitor's language (see t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const t = getDictionary(await getRequestLocale())
+  const locale = await getRequestLocale()
+  const t = getDictionary(locale)
   return {
     title: t.seo.carsTitle,
     description: t.seo.carsDescription,
-    alternates: { canonical: '/cars/' },
+    alternates: pageAlternates('/cars/', locale),
   }
 }
 

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getDictionary } from '@/lib/i18n/dictionaries'
+import { pageAlternates } from '@/lib/seo/alternates'
 import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
@@ -35,7 +36,7 @@ export async function generateMetadata({
   return {
     title: pageTitle,
     description,
-    alternates: { canonical: `/products/${slug}/` },
+    alternates: pageAlternates(`/products/${slug}/`, locale),
     openGraph: {
       type: 'website',
       title: pageTitle,
