@@ -74,7 +74,6 @@ export function LanguageProvider({
         `${window.location.pathname}${window.location.search}${window.location.hash}`
       ) {
         router.push(destination)
-        return
       }
     }
 
