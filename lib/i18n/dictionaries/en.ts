@@ -613,6 +613,11 @@ export const en = {
     rights: 'All rights reserved.',
     slogan: 'Parts and vehicles. Final price, no surprises.',
   },
+  productsFilters: {
+    brandsLabel: 'Truck brand',
+    allBrands: 'All brands',
+    perPageNote: 'Showing {count} parts per page',
+  },
   faq: {
     eyebrow: 'FAQ',
     title: 'What customers ask us most',

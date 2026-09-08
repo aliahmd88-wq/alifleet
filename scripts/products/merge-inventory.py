@@ -72,6 +72,14 @@ def normalize_models(text):
         if y1 and int(y1) >= 2026: year_label = f"{y0}+"
         elif y1: year_label = f"{y0}-{y1}"
         else: year_label = f"{y0}+" if raw.rstrip().endswith('-') or re.search(r'20\d\d\s*$', raw) else y0
+    # DAF rows often carry only tonnage/Euro; the owner wants the model named too.
+    # DAF LF covers roughly 7.5-19 t, CF 18-32 t, XF/XG are the heavy tractors.
+    if not models and ('DAF' in brands or (not brands and ton_label)):
+        hi = int(ton_label.split(' ')[0].split('-')[-1]) if ton_label else 0
+        if hi and hi <= 19: models = ['LF']
+        elif hi and hi >= 26: models = ['CF']
+        elif hi: models = ['LF', 'CF']
+        if models: brands = brands or ['DAF']; note.append('model inferred from tonnage')
     parts = []
     if 'tgl' in t and 'tgm' in t: parts.append('TGL 2005-2021 / TGM 2005-2021')
     elif models: parts.append(' / '.join(models))
@@ -89,6 +97,18 @@ def normalize_models(text):
     elif len(brands) > 1: compat = brands
     return label, compat, '; '.join(note)
 
+# SKU family -> (brand key as used in the sheet, model label). Used only when the
+# owner's models text names no model.
+SKU_FAMILIES = {
+    'LF': ('Daf', 'LF'), 'CF': ('Daf', 'CF'), 'XF': ('Daf', 'XF'), 'DXF': ('Daf', 'XF'), 'XG': ('Daf', 'XG'),
+    'VH': ('Volvo', 'FH'), 'VM': ('Volvo', 'FM'),
+    'SR': ('Scania', 'R'), 'RR': ('Scania', 'R'),
+    'MTG': ('Man', 'TGX / TGS'), 'NMX': ('Man', 'TGX'),
+    'BP': ('Mercedes', 'Actros'),
+    'INS': ('Iveco', 'Stralis'), 'ISW': ('Iveco', 'S-Way'), 'IA': ('Iveco', ''),
+}
+BRAND_LABEL = {'Daf': 'DAF', 'Volvo': 'Volvo', 'Scania': 'Scania', 'Man': 'MAN', 'Mercedes': 'Mercedes', 'Iveco': 'Iveco'}
+
 rows = list(csv.DictReader(open(review_path, encoding='utf-8-sig')))
 mapping = collections.OrderedDict(); filled = 0
 for r in rows:
@@ -98,6 +118,17 @@ for r in rows:
     r['inventory_name_he'] = inv['name_he'] if inv else ''
     r['models_raw'] = inv['models'] if inv else ''
     label, compat, note = normalize_models(r['models_raw']) if inv else ('', [], 'not in inventory')
+    # No model anywhere: fall back to the SKU family code for every brand and say so
+    # (the owner asked for a model on every product; the sheet flags these for review).
+    fam = SKU_FAMILIES.get((re.match(r'HTP-([A-Z]+)', r['sku'] or '') or re.match(r'()', ''))[1] if r['sku'] else '')
+    if fam:
+        if not r.get('brand'):
+            # The proposed names were built without a brand; blank them so the
+            # payload builder regenerates them with the brand (they are not owner edits).
+            r['brand'] = fam[0]; r['new_name_he'] = r['new_name_ar'] = r['new_name_en'] = ''
+        if not label:
+            label = fam[1]; compat = [f"{BRAND_LABEL[fam[0]]} {m}" for m in fam[1].split(' / ')]
+            note = (note + '; ' if note else '') + 'model from SKU code (check)'
     if label and not r['model']:
         r['model'] = label; filled += 1
     r['compat_models'] = ' | '.join(compat)

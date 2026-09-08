@@ -610,6 +610,11 @@ export const ar: Dictionary = {
     rights: 'جميع الحقوق محفوظة.',
     slogan: 'قطع غيار وسيارات. سعر نهائي، بدون مفاجآت.',
   },
+  productsFilters: {
+    brandsLabel: 'ماركة الشاحنة',
+    allBrands: 'كل الماركات',
+    perPageNote: 'نعرض {count} قطعة في الصفحة',
+  },
   faq: {
     eyebrow: 'أسئلة شائعة',
     title: 'أكثر ما يسألنا عنه الزبائن',

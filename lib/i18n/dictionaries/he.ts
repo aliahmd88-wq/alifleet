@@ -606,6 +606,11 @@ export const he: Dictionary = {
     rights: 'כל הזכויות שמורות.',
     slogan: 'חלפים ורכבים. מחיר סופי, בלי הפתעות.',
   },
+  productsFilters: {
+    brandsLabel: 'יצרן המשאית',
+    allBrands: 'כל היצרנים',
+    perPageNote: 'מציגים {count} חלפים בעמוד',
+  },
   faq: {
     eyebrow: 'שאלות נפוצות',
     title: 'מה שואלים אותנו הכי הרבה',

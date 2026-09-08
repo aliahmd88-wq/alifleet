@@ -14,12 +14,21 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
   const { t, locale } = useLanguage()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<PartCategory | 'all'>('all')
+  const [brand, setBrand] = useState<string>('all')
   const [sort, setSort] = useState<SortKey>('featured')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 8 // 2 rows × 4 cols (xl breakpoint)
+  // Six rows of four at the widest breakpoint: the owner wants the catalogue
+  // to feel full rather than paginated after eight items.
+  const PAGE_SIZE = 24
 
   // Only categories that actually contain products get a chip, so the imported
   // catalog does not show seven dead filters next to one live one.
+  // Truck brands present in the catalogue (DAF, MAN, Volvo…), for the brand filter.
+  const availableBrands = useMemo(
+    () => Array.from(new Set(parts.map((part) => part.brand).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [parts]
+  )
+
   const availableCategories = useMemo(() => {
     const present = new Set(parts.map((part) => part.category))
     return partCategories.filter((key) => present.has(key))
@@ -42,6 +51,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
     const needle = query.trim()
     const filtered = parts.filter((part) => {
       if (category !== 'all' && part.category !== category) return false
+      if (brand !== 'all' && part.brand !== brand) return false
       if (!needle) return true
       // Every locale is searched, not just the active one: a customer who knows
       // the Hebrew name of a part must still find it while browsing in Arabic.
@@ -58,7 +68,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
         (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
       )
     return sorted
-  }, [parts, haystacks, query, category, sort, locale])
+  }, [parts, haystacks, query, category, brand, sort, locale])
 
   // Reset to page 1 whenever the filtered set changes
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
@@ -70,7 +80,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const hasFilters = query.trim() !== '' || category !== 'all'
+  const hasFilters = query.trim() !== '' || category !== 'all' || brand !== 'all'
 
   const trust = [
     { icon: ShieldCheck, label: t.products.trustWarranty },
@@ -134,8 +144,42 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
           </div>
         </div>
 
-        {/* Category chips */}
+        {/* Brand chips: customers look for parts by their truck first */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="me-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {t.productsFilters.brandsLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => { setBrand('all'); setPage(1) }}
+            aria-pressed={brand === 'all'}
+            className={
+              brand === 'all'
+                ? 'rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background'
+                : 'rounded-full bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground'
+            }
+          >
+            {t.productsFilters.allBrands}
+          </button>
+          {availableBrands.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { setBrand(key); setPage(1) }}
+              aria-pressed={brand === key}
+              className={
+                brand === key
+                  ? 'rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background'
+                  : 'rounded-full bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-foreground'
+              }
+            >
+              <span dir="ltr">{key.toUpperCase() === 'DAF' || key.toUpperCase() === 'MAN' ? key.toUpperCase() : key}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Category chips */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="sr-only">{t.products.categoriesLabel}</span>
           <button
             type="button"
@@ -176,6 +220,7 @@ export function ProductsBrowser({ parts }: { parts: PartSummary[] }) {
               onClick={() => {
                 setQuery('')
                 setCategory('all')
+                setBrand('all')
               }}
               className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
             >
