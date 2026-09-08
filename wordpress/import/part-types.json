@@ -47,73 +47,73 @@
   "types": {
     "headlight": {
       "he": "פנס קדמי",
-      "ar": "مصباح أمامي",
+      "ar": "ضوء أمامي",
       "en": "Headlight",
       "cat": "lighting"
     },
     "headlight_xenon": {
       "he": "פנס קדמי קסנון",
-      "ar": "مصباح أمامي زينون",
+      "ar": "ضوء أمامي زينون",
       "en": "Xenon Headlight",
       "cat": "lighting"
     },
     "headlight_led": {
       "he": "פנס קדמי LED",
-      "ar": "مصباح أمامي LED",
+      "ar": "ضوء أمامي LED",
       "en": "LED Headlight",
       "cat": "lighting"
     },
     "tail_light": {
-      "he": "פנס אחורי",
-      "ar": "مصباح خلفي",
+      "he": "פנס אחורי בקלית",
+      "ar": "ضوء خلفي",
       "en": "Tail Light",
       "cat": "lighting"
     },
     "tail_light_lens": {
-      "he": "כיסוי פלסטיק לפנס אחורי",
-      "ar": "غطاء بلاستيك لمصباح خلفي",
+      "he": "מכסה בקלית אחורית",
+      "ar": "غطاء ضوء خلفي",
       "en": "Tail Light Lens Cover",
       "cat": "lighting"
     },
     "fog_light": {
       "he": "פנס ערפל קדמי",
-      "ar": "مصباح ضباب أمامي",
+      "ar": "ضوء ضباب أمامي",
       "en": "Front Fog Light",
       "cat": "lighting"
     },
     "fog_light_led": {
       "he": "פנס ערפל קדמי LED",
-      "ar": "مصباح ضباب أمامي LED",
+      "ar": "ضوء ضباب أمامي LED",
       "en": "LED Front Fog Light",
       "cat": "lighting"
     },
     "roof_light": {
-      "he": "פנס עליון לתא הנהג",
-      "ar": "مصباح علوي للمقصورة",
-      "en": "Cab Roof Light",
+      "he": "פנס עליון (זרקור)",
+      "ar": "ضوء علوي (كشاف)",
+      "en": "Cab Roof Spotlight",
       "cat": "lighting"
     },
     "headlight_bracket": {
       "he": "תושבת פנס קדמי",
-      "ar": "حامل مصباح أمامي",
+      "ar": "قاعدة ضوء أمامي",
       "en": "Headlight Bracket",
       "cat": "lighting"
     },
     "headlight_frame": {
       "he": "מסגרת פנס קדמי",
-      "ar": "إطار مصباح أمامي",
+      "ar": "إطار ضوء أمامي",
       "en": "Headlight Frame",
       "cat": "lighting"
     },
     "headlight_cover": {
       "he": "כיסוי פנס קדמי",
-      "ar": "غطاء مصباح أمامي",
+      "ar": "غطاء ضوء أمامي",
       "en": "Headlight Cover",
       "cat": "lighting"
     },
     "cab_step": {
-      "he": "מדרגה לתא הנהג",
-      "ar": "درجة صعود للمقصورة",
+      "he": "מדרגה",
+      "ar": "درجة",
       "en": "Cab Step",
       "cat": "body"
     },
@@ -148,15 +148,15 @@
       "cat": "body"
     },
     "step_wall": {
-      "he": "קיר תמיכה למדרגה",
+      "he": "קיר תמיכת מדרגה",
       "ar": "جدار دعم الدرجة",
       "en": "Step Support Wall",
       "cat": "body"
     },
     "mud_guard": {
-      "he": "מגן בוץ קדמי",
-      "ar": "واقي طين أمامي",
-      "en": "Front Mud Guard",
+      "he": "מגן פוטס",
+      "ar": "رفرف (واقي طين)",
+      "en": "Mud Guard",
       "cat": "body"
     },
     "mirror_electric": {
@@ -190,25 +190,25 @@
       "cat": "body"
     },
     "corner_panel_front": {
-      "he": "פינת כנף קדמית (מסיט רוח)",
-      "ar": "زاوية أمامية (كاسر هواء)",
+      "he": "מסית רוח כנף קדמית",
+      "ar": "كاسر هواء زاوية أمامية",
       "en": "Front Corner Panel (Wind Deflector)",
       "cat": "body"
     },
     "corner_panel_outer": {
-      "he": "מסיט רוח חיצוני",
+      "he": "מסית רוח חיצוני",
       "ar": "كاسر هواء خارجي",
       "en": "Outer Wind Deflector Panel",
       "cat": "body"
     },
     "corner_panel_inner": {
-      "he": "מסיט רוח פנימי",
+      "he": "מסית רוח פנימי",
       "ar": "كاسر هواء داخلي",
       "en": "Inner Wind Deflector Panel",
       "cat": "body"
     },
     "corner_panel_cover": {
-      "he": "כיסוי מסיט רוח קדמי",
+      "he": "מכסה מסית רוח קדמי",
       "ar": "غطاء كاسر هواء أمامي",
       "en": "Front Wind Deflector Cover",
       "cat": "body"
@@ -226,14 +226,14 @@
       "cat": "body"
     },
     "bumper_corner": {
-      "he": "פינת פגוש קדמי",
+      "he": "פינת פגוש קדמי (משקפיים)",
       "ar": "زاوية صدام أمامي",
       "en": "Front Bumper Corner",
       "cat": "body"
     },
     "bumper_corner_cover": {
-      "he": "כיסוי פינת פגוש קדמי",
-      "ar": "غطاء زاوية صدام أمامي",
+      "he": "מכסה משקפיים",
+      "ar": "غطاء زاوية صدام",
       "en": "Front Bumper Corner Cover",
       "cat": "body"
     },
@@ -244,8 +244,8 @@
       "cat": "body"
     },
     "bumper_fog_cover": {
-      "he": "כיסוי פנס ערפל לפגוש קדמי",
-      "ar": "غطاء مصباح ضباب للصدام الأمامي",
+      "he": "כיסוי ערפל לפגוש קדמי",
+      "ar": "غطاء ضوء ضباب للصدام الأمامي",
       "en": "Front Bumper Fog Light Cover",
       "cat": "body"
     },
@@ -268,8 +268,8 @@
       "cat": "body"
     },
     "front_panel_grille": {
-      "he": "לוח קדמי (מכסה מנוע)",
-      "ar": "لوح أمامي (غطاء المحرك)",
+      "he": "מכסה מנוע (גריל קדמי)",
+      "ar": "غطاء محرك (شبك أمامي)",
       "en": "Cab Front Panel",
       "cat": "body"
     },
@@ -292,8 +292,8 @@
       "cat": "body"
     },
     "coolant_tank": {
-      "he": "מיכל עיבוי (מיכל מים)",
-      "ar": "خزان تمدد سائل التبريد",
+      "he": "מיכל עיבוי",
+      "ar": "خزان مياه التبريد",
       "en": "Coolant Expansion Tank",
       "cat": "engine"
     },
@@ -311,7 +311,7 @@
     },
     "wiper_panel": {
       "he": "לוח מגבים",
-      "ar": "لوح المساحات",
+      "ar": "لوح المسّاحات",
       "en": "Wiper Panel",
       "cat": "body"
     },
@@ -332,6 +332,18 @@
       "ar": "لوح",
       "en": "Panel",
       "cat": "body"
+    },
+    "tail_light_led": {
+      "he": "פנס אחורי בקלית LED",
+      "ar": "ضوء خلفي LED",
+      "en": "LED Tail Light",
+      "cat": "lighting"
+    },
+    "headlight_half_led": {
+      "he": "פנס קדמי חצי LED",
+      "ar": "ضوء أمامي نصف LED",
+      "en": "Half-LED Headlight",
+      "cat": "lighting"
     }
   },
   "qualifiers": {
@@ -358,7 +370,7 @@
   },
   "titles": {
     "פנס קדמי חזית ליד": {
-      "type": "headlight"
+      "type": "headlight_led"
     },
     "פנס קדמי חזית": {
       "type": "headlight"
@@ -370,8 +382,7 @@
       "type": "headlight"
     },
     "פנס קדמי חזית ליד חצי": {
-      "type": "headlight",
-      "q": "manual_adjust"
+      "type": "headlight_half_led"
     },
     "פנס קסנון ימין": {
       "type": "headlight_xenon"
@@ -389,7 +400,7 @@
       "type": "tail_light"
     },
     "פנס איתות אחורי בקלית ליד": {
-      "type": "tail_light"
+      "type": "tail_light_led"
     },
     "מכסה פלסטיק לבקלית אחורית": {
       "type": "tail_light_lens"
@@ -598,5 +609,6 @@
     "Visor": "sun_visor",
     "Panel": "panel",
     "Cover": "bumper_cover"
-  }
+  },
+  "_market_note": "Hebrew wording follows Israeli trade terms (בקלית, משקפיים, מסית רוח, מגן פוטס, LED); Arabic uses everyday garage words (ضوء، صدام، شبك، رفرف)."
 }
