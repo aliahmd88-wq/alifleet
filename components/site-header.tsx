@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { usePathname } from 'next/navigation'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -63,7 +63,7 @@ export function SiteHeader() {
           className="hidden items-center rounded-full bg-card p-1.5 shadow-lg shadow-foreground/5 md:flex"
         >
           {navLinks.map((link) => (
-            <Link
+            <LocaleLink
               key={link.href}
               href={link.href}
               data-nav-item
@@ -75,7 +75,7 @@ export function SiteHeader() {
               }
             >
               {link.label}
-            </Link>
+            </LocaleLink>
           ))}
         </nav>
 
@@ -88,7 +88,7 @@ export function SiteHeader() {
           <span className="mx-1 h-6 w-px bg-border" aria-hidden="true" />
           <AccountMenu />
           <span className="mx-1 h-6 w-px bg-border" aria-hidden="true" />
-          <Link
+          <LocaleLink
             href="/cart"
             aria-label={t.nav.cart}
             className="relative flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
@@ -100,11 +100,11 @@ export function SiteHeader() {
                 {count}
               </span>
             )}
-          </Link>
+          </LocaleLink>
         </div>
 
         {/* Mobile: brand chip */}
-        <Link
+        <LocaleLink
           href="/"
           data-nav-pill
           className="flex items-center rounded-full bg-card p-1.5 shadow-lg shadow-foreground/5 md:hidden"
@@ -112,10 +112,10 @@ export function SiteHeader() {
           <span className="rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background">
             {t.nav.brand}
           </span>
-        </Link>
+        </LocaleLink>
 
         <div className="flex items-center gap-2 md:hidden">
-          <Link
+          <LocaleLink
             href="/cart"
             aria-label={t.nav.cart}
             className="relative flex size-11 items-center justify-center rounded-full bg-card text-foreground shadow-lg shadow-foreground/5"
@@ -126,7 +126,7 @@ export function SiteHeader() {
                 {count}
               </span>
             )}
-          </Link>
+          </LocaleLink>
           <button
             type="button"
             className="flex size-11 items-center justify-center rounded-full bg-card text-foreground shadow-lg shadow-foreground/5"
@@ -145,7 +145,7 @@ export function SiteHeader() {
           aria-label="Mobile navigation"
         >
           {navLinks.map((link) => (
-            <Link
+            <LocaleLink
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
@@ -157,18 +157,18 @@ export function SiteHeader() {
               }
             >
               {link.label}
-            </Link>
+            </LocaleLink>
           ))}
           <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
             {signedIn ? (
               <>
-                <Link
+                <LocaleLink
                   href="/account"
                   onClick={() => setOpen(false)}
                   className="rounded-full px-5 py-3 text-center text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
                   {t.account.myAccount}
-                </Link>
+                </LocaleLink>
                 <form action={logoutAction}>
                   <button
                     type="submit"
@@ -179,13 +179,13 @@ export function SiteHeader() {
                 </form>
               </>
             ) : (
-              <Link
+              <LocaleLink
                 href="/account/login"
                 onClick={() => setOpen(false)}
                 className="rounded-full px-5 py-3 text-center text-base font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 {t.account.signIn}
-              </Link>
+              </LocaleLink>
             )}
           </div>
           <div className="mt-2 border-t border-border pt-3">

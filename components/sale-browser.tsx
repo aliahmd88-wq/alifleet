@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { saleCarConditions, saleCarStatuses } from '@/lib/data/sale-cars'
 import type { SaleCar, SaleCarCondition, SaleCarStatus } from '@/lib/data/sale-cars'
 import type { SaleCarsStatus } from '@/lib/wp/sale-cars'
@@ -79,12 +79,12 @@ export function SaleBrowser({ cars, status, copy }: Props) {
           <p className="mt-2 text-sm text-muted-foreground">
             {t.cars.saleUnavailableLead}
           </p>
-          <Link
+          <LocaleLink
             href="/contact"
             className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.common.callUs}
-          </Link>
+          </LocaleLink>
         </div>
       </Shell>
     )
@@ -109,12 +109,12 @@ export function SaleBrowser({ cars, status, copy }: Props) {
         <div className="mt-10 rounded-3xl bg-card p-12 text-center ring-1 ring-border">
           <p className="font-semibold text-foreground">{t.cars.saleEmpty}</p>
           <p className="mt-2 text-sm text-muted-foreground">{t.cars.saleEmptyLead}</p>
-          <Link
+          <LocaleLink
             href="/contact"
             className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.common.callUs}
-          </Link>
+          </LocaleLink>
         </div>
       </Shell>
     )

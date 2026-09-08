@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowRight, Package } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import type { CustomerOrder } from '@/lib/wp/types'
@@ -42,13 +42,13 @@ export function OrdersView({ orders }: { orders: CustomerOrder[] }) {
           <p className="mx-auto mt-2 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
             {t.account.orders.emptyLead}
           </p>
-          <Link
+          <LocaleLink
             href="/products"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
           >
             {t.cart.browseParts}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-          </Link>
+          </LocaleLink>
         </div>
       )}
     </div>

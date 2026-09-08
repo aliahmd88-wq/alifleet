@@ -8,13 +8,14 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   LOCALE_STORAGE_KEY,
   defaultLocale,
-  isLocale,
   localeMeta,
   type Locale,
 } from './config'
+import { parsePublicPathname, toPublicPathname } from './routing'
 import { en, type Dictionary } from './dictionaries/en'
 import { ar } from './dictionaries/ar'
 import { he } from './dictionaries/he'
@@ -37,40 +38,17 @@ export function LanguageProvider({
   initialLocale?: Locale
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const [locale, setLocaleState] = useState<Locale>(initialLocale)
 
-  // Reconcile with the visitor's stored preference (covers cases where the
-  // cookie was never written, e.g. first visit through a cached page). Legacy
-  // WordPress language links arrive as ?locale=ar|en|he, so consume that value
-  // before falling back to the stored preference and persist it for the server.
+  // The server-selected locale is authoritative. Mirror it into browser
+  // storage so private routes retain the last language without overriding a
+  // language encoded in an indexed public URL.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const rawLocale = params.get('locale')
-    const requested = typeof rawLocale === 'string' ? rawLocale.trim().toLowerCase() : null
-    const isPolicyPath =
-      /^\/(privacy-policy|terms|return-policy|terms-and-conditions|terms-conditions|refund-returns|refund_returns|refund-and-returns)/.test(
-        window.location.pathname
-      )
-    if (isLocale(requested)) {
-      setLocaleState(requested)
-      window.localStorage.setItem(LOCALE_STORAGE_KEY, requested)
-      document.cookie = `${LOCALE_STORAGE_KEY}=${requested}; path=/; max-age=31536000; samesite=lax`
-      if (!isPolicyPath) {
-        params.delete('locale')
-        const query = params.toString()
-        window.history.replaceState(
-          {},
-          '',
-          `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
-        )
-      }
-      return
-    }
-
-    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (isLocale(stored) && stored !== locale) setLocaleState(stored)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+    const secure = window.location.protocol === 'https:' ? '; secure' : ''
+    document.cookie = `${LOCALE_STORAGE_KEY}=${locale}; path=/; max-age=31536000; samesite=lax${secure}`
+  }, [locale])
 
   // Keep <html lang/dir> in sync so native text direction, fonts and
   // logical CSS properties all resolve correctly.
@@ -81,10 +59,27 @@ export function LanguageProvider({
   }, [locale])
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next)
     window.localStorage.setItem(LOCALE_STORAGE_KEY, next)
-    document.cookie = `${LOCALE_STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`
-  }, [])
+    const secure = window.location.protocol === 'https:' ? '; secure' : ''
+    document.cookie = `${LOCALE_STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax${secure}`
+
+    const publicRoute = parsePublicPathname(window.location.pathname)
+    if (publicRoute) {
+      const destination = `${toPublicPathname(
+        publicRoute.internalPathname,
+        next
+      )}${window.location.search}${window.location.hash}`
+      if (
+        destination !==
+        `${window.location.pathname}${window.location.search}${window.location.hash}`
+      ) {
+        router.push(destination)
+        return
+      }
+    }
+
+    setLocaleState(next)
+  }, [router])
 
   const value = useMemo<LanguageContextValue>(
     () => ({

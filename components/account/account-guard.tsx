@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowRight } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import type { AuthErrorCode } from '@/lib/wp/errors'
@@ -43,13 +43,13 @@ export function AccountGuard({ code }: { code: AuthErrorCode }) {
             t.account.errors.unknown}
         </FormError>
       </div>
-      <Link
+      <LocaleLink
         href="/account/login"
         className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
       >
         {t.account.signIn}
         <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-      </Link>
+      </LocaleLink>
     </div>
   )
 }

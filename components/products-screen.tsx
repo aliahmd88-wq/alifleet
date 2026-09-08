@@ -1,7 +1,7 @@
 'use client'
 
 import { PackageX } from 'lucide-react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import type { PartSummary } from '@/lib/data/parts'
 import type { CatalogStatus } from '@/lib/wp/catalog'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -52,12 +52,12 @@ export function ProductsScreen({
                 ? t.products.catalogEmptyLead
                 : t.products.catalogUnavailableLead}
             </p>
-            <Link
+            <LocaleLink
               href="/contact"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-3.5 text-base font-semibold text-background transition-opacity hover:opacity-90"
             >
               {t.nav.contact}
-            </Link>
+            </LocaleLink>
           </div>
         </section>
       ) : (

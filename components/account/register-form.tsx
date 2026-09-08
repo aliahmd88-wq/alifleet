@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { registerAction } from '@/lib/auth/actions'
@@ -117,12 +117,12 @@ export function RegisterForm() {
 
         <p className="text-center text-sm text-muted-foreground">
           {t.account.register.haveAccount}{' '}
-          <Link
+          <LocaleLink
             href="/account/login"
             className="text-accent underline-offset-4 transition-colors hover:underline"
           >
             {t.account.register.loginLink}
-          </Link>
+          </LocaleLink>
         </p>
       </div>
     </form>

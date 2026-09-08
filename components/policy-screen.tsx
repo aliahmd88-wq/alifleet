@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ShieldCheck, FileText, RefreshCcw, ArrowLeft, ArrowRight, Calendar, Printer } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { isLocale, localeMeta, type Locale } from '@/lib/i18n/config'
@@ -204,13 +204,13 @@ export function PolicyScreen({
         {/* Breadcrumb & Navigation */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Link
+            <LocaleLink
               href="/"
               className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
             >
               <BackIcon className="size-3.5" aria-hidden="true" />
               {copy.breadcrumbHome}
-            </Link>
+            </LocaleLink>
             <span aria-hidden="true">/</span>
             <span>{copy.breadcrumbLegal}</span>
             <span aria-hidden="true">/</span>
@@ -322,12 +322,12 @@ export function PolicyScreen({
                 {copy.contactSupport}
               </p>
             </div>
-            <Link
+            <LocaleLink
               href="/contact"
               className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition-transform hover:-translate-y-0.5"
             >
               {copy.contactBtn}
-            </Link>
+            </LocaleLink>
           </div>
         </aside>
       </div>

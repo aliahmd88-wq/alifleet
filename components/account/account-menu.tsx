@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { usePathname } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -45,13 +45,13 @@ export function AccountMenu() {
 
   if (!signedIn) {
     return (
-      <Link
+      <LocaleLink
         href="/account/login"
         className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <User className="size-4" aria-hidden="true" />
         <span>{t.account.signIn}</span>
-      </Link>
+      </LocaleLink>
     )
   }
 
@@ -84,14 +84,14 @@ export function AccountMenu() {
           className="absolute end-0 top-full z-50 mt-3 w-56 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-xl"
         >
           {items.map((item) => (
-            <Link
+            <LocaleLink
               key={item.href}
               href={item.href}
               role="menuitem"
               className="block rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               {item.label}
-            </Link>
+            </LocaleLink>
           ))}
 
           <form action={logoutAction} className="mt-1 border-t border-border pt-1">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowLeft, Check, MessageCircle, Phone } from 'lucide-react'
 import type { SaleCar } from '@/lib/data/sale-cars'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -69,13 +69,13 @@ export function SaleCarDetail({
   return (
     <>
       <div className="mx-auto max-w-7xl px-4 pt-28 md:px-8 md:pt-36">
-        <Link
+        <LocaleLink
           href="/cars#for-sale"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" data-flip-rtl />
           {t.saleDetail.backToCars}
-        </Link>
+        </LocaleLink>
       </div>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">

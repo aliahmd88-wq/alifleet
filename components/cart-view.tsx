@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { useSearchParams } from 'next/navigation'
 
 import { useAuth } from '@/lib/auth/auth-context' 
@@ -137,13 +137,13 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
           <p className="mt-3 max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground">
             {t.cart.emptyLead}
           </p>
-          <Link
+          <LocaleLink
             href="/products"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-7 py-3.5 text-base font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.cart.browseParts}
             <ArrowRight className="size-4" aria-hidden="true" data-flip-rtl />
-          </Link>
+          </LocaleLink>
         </div>
       </div>
     )
@@ -159,7 +159,7 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
               key={part.slug}
               className="flex flex-col gap-4 rounded-3xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center md:p-5"
             >
-              <Link
+              <LocaleLink
                 href={`/products/${part.slug}`}
                 className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-2xl bg-secondary sm:size-28 sm:aspect-auto"
               >
@@ -170,16 +170,16 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
                   sizes="112px"
                   className="object-cover"
                 />
-              </Link>
+              </LocaleLink>
 
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {part.brand} · {t.products.categories[part.category]}
                 </p>
                 <h3 className="mt-1.5 text-pretty text-base font-semibold leading-snug text-foreground">
-                  <Link href={`/products/${part.slug}`} className="hover:text-accent">
+                  <LocaleLink href={`/products/${part.slug}`} className="hover:text-accent">
                     {part.name[locale]}
-                  </Link>
+                  </LocaleLink>
                 </h3>
                 <p className="mt-1 font-mono text-xs text-muted-foreground" dir="ltr">
                   {part.sku} · {formatPrice(part.price, store.currency)}
@@ -230,12 +230,12 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
           ))}
 
           <li className="flex justify-between gap-4 px-1">
-            <Link
+            <LocaleLink
               href="/products"
               className="text-sm font-medium text-accent hover:underline"
             >
               {t.cart.continueShopping}
-            </Link>
+            </LocaleLink>
             <button
               type="button"
               onClick={clear}
@@ -322,12 +322,12 @@ export function CartView({ catalog }: { catalog: PartSummary[] }) {
                         ? 'يجب تسجيل الدخول أو إنشاء حساب لإتمام الطلب.'
                         : 'Please sign in or create an account to complete your order.'}
                     </p>
-                    <Link
+                    <LocaleLink
                       href={`/account/login?redirect=${encodeURIComponent('/cart')}`}
                       className="mt-3 inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
                     >
                       {locale === 'ar' ? 'تسجيل الدخول' : 'Sign in to checkout'}
-                    </Link>
+                    </LocaleLink>
                   </div>
                 )}
               </>
