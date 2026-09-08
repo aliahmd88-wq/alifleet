@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowLeft, Check, MessageCircle, Phone } from 'lucide-react'
 import type { ImportCar } from '@/lib/data/import-cars'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -40,13 +40,13 @@ export function ImportCarDetail({ car, related }: { car: ImportCar; related: Imp
   return (
     <>
       <div className="mx-auto max-w-7xl px-4 pt-28 md:px-8 md:pt-36">
-        <Link
+        <LocaleLink
           href="/cars#import"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden="true" data-flip-rtl />
           {t.common.backToImport}
-        </Link>
+        </LocaleLink>
       </div>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">

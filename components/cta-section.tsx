@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowRight, Mail, Phone } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { useStore } from '@/lib/store-context'
@@ -57,7 +57,7 @@ export function CtaSection() {
           </p>
 
           <div data-cta-reveal className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link
+            <LocaleLink
               href="/contact"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
             >
@@ -68,7 +68,7 @@ export function CtaSection() {
                 aria-hidden="true"
                 data-flip-rtl
               />
-            </Link>
+            </LocaleLink>
             {store.phoneHref && (
               <a
                 href={store.phoneHref}

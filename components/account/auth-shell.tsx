@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { MessageCircle, Phone } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { whatsappLink } from '@/lib/site-config'
@@ -81,12 +81,12 @@ export function AuthShell({
                       {t.common.callUs}
                     </a>
                   )}
-                  <Link
+                  <LocaleLink
                     href="/contact"
                     className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-foreground ring-1 ring-border transition-colors hover:bg-secondary"
                   >
                     {t.nav.contact}
-                  </Link>
+                  </LocaleLink>
                 </div>
               </div>
             </div>

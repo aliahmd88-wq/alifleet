@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   LOCALE_STORAGE_KEY,
   defaultLocale,
@@ -37,6 +38,7 @@ export function LanguageProvider({
   initialLocale?: Locale
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const [locale, setLocaleState] = useState<Locale>(initialLocale)
 
   // The server-selected locale is authoritative. Mirror it into browser
@@ -71,13 +73,13 @@ export function LanguageProvider({
         destination !==
         `${window.location.pathname}${window.location.search}${window.location.hash}`
       ) {
-        window.location.assign(destination)
+        router.push(destination)
         return
       }
     }
 
     setLocaleState(next)
-  }, [])
+  }, [router])
 
   const value = useMemo<LanguageContextValue>(
     () => ({

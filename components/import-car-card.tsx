@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowUpRight, Calendar, Gauge, MapPin } from 'lucide-react'
 import type { ImportCar } from '@/lib/data/import-cars'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -22,7 +22,7 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-3xl bg-card ring-1 ring-border transition-shadow hover:shadow-xl hover:shadow-foreground/5">
-      <Link
+      <LocaleLink
         href={`/cars/import/${car.slug}`}
         className="relative block aspect-16/10 overflow-hidden bg-secondary"
       >
@@ -38,7 +38,7 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
         >
           {t.import.status[car.status]}
         </span>
-      </Link>
+      </LocaleLink>
 
       <div className="flex flex-1 flex-col p-5">
         <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -49,9 +49,9 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
         </p>
 
         <h3 className="mt-2 text-pretty text-lg font-semibold leading-snug text-foreground">
-          <Link href={`/cars/import/${car.slug}`} className="hover:text-accent">
+          <LocaleLink href={`/cars/import/${car.slug}`} className="hover:text-accent">
             {car.model}
-          </Link>
+          </LocaleLink>
         </h3>
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
           {car.subtitle[locale]}
@@ -81,13 +81,13 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
                 : formatPrice(car.price, store.currency)}
             </p>
           </div>
-          <Link
+          <LocaleLink
             href={`/cars/import/${car.slug}`}
             className="flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.common.viewDetails}
             <ArrowUpRight className="size-4" aria-hidden="true" data-flip-rtl />
-          </Link>
+          </LocaleLink>
         </div>
       </div>
     </article>

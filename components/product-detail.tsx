@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowLeft, Minus, Plus, MessageCircle, ShieldCheck, Truck } from 'lucide-react'
 import type { Part, PartSummary } from '@/lib/data/parts'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -39,13 +39,13 @@ export function ProductDetail({
     <>
       <section className="pt-28 md:pt-36">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <Link
+          <LocaleLink
             href="/products"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" aria-hidden="true" data-flip-rtl />
             {t.common.backToProducts}
-          </Link>
+          </LocaleLink>
 
           <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-14">
             {/* Image */}

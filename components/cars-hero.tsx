@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowUpRight, Ship, Store } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { resolveCopy } from '@/lib/i18n/copy-block'
@@ -32,21 +32,21 @@ export function CarsHero({ copy }: Props) {
       lead={resolveCopy(copy?.lead, locale, t.cars.lead)}
     >
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link
+        <LocaleLink
           href="#for-sale"
           className="flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
         >
           <Store className="size-4" aria-hidden="true" />
           {resolveCopy(copy?.ctaSale, locale, t.cars.ctaSale)}
           <ArrowUpRight className="size-4" aria-hidden="true" data-flip-rtl />
-        </Link>
-        <Link
+        </LocaleLink>
+        <LocaleLink
           href="#import"
           className="flex items-center gap-2 rounded-full bg-card px-6 py-3 text-sm font-semibold text-foreground ring-1 ring-border transition-colors hover:bg-secondary"
         >
           <Ship className="size-4" aria-hidden="true" />
           {resolveCopy(copy?.ctaImport, locale, t.cars.ctaImport)}
-        </Link>
+        </LocaleLink>
       </div>
     </PageHero>
   )

@@ -9,7 +9,7 @@ import { useLanguage } from '@/lib/i18n/language-context'
 import { resolveCopy } from '@/lib/i18n/copy-block'
 import type { CarsPageCopy } from '@/lib/wp/cars-page'
 import { ImportCarCard } from '@/components/import-car-card'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 
 type Props = {
   cars: ImportCar[]
@@ -56,12 +56,12 @@ export function ImportBrowser({ cars, status, copy }: Props) {
           <p className="mt-2 text-sm text-muted-foreground">
             {t.import.inventoryUnavailableLead}
           </p>
-          <Link
+          <LocaleLink
             href="/contact"
             className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.common.callUs}
-          </Link>
+          </LocaleLink>
         </div>
       </section>
     )
@@ -92,12 +92,12 @@ export function ImportBrowser({ cars, status, copy }: Props) {
           <p className="mt-2 text-sm text-muted-foreground">
             {t.import.inventoryEmptyLead}
           </p>
-          <Link
+          <LocaleLink
             href="/contact"
             className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t.common.callUs}
-          </Link>
+          </LocaleLink>
         </div>
       </section>
     )

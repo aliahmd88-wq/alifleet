@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowUpRight } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 
@@ -18,13 +18,13 @@ export function ImportCustomCta() {
             {t.import.customLead}
           </p>
         </div>
-        <Link
+        <LocaleLink
           href="/contact?subject=import"
           className="flex w-fit shrink-0 items-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
         >
           {t.import.customCta}
           <ArrowUpRight className="size-4" aria-hidden="true" data-flip-rtl />
-        </Link>
+        </LocaleLink>
       </div>
     </section>
   )

@@ -6,7 +6,7 @@ import { Paginator } from '@/components/paginator'
 import type { BlogPost, BlogCategory } from '@/lib/data/blog'
 import type { PostsStatus } from '@/lib/wp/posts'
 import { BlogCard } from '@/components/blog-card'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 
 const ALL = 'all' as const
 type Filter = typeof ALL | BlogCategory
@@ -29,12 +29,12 @@ export function BlogBrowser({ posts, status }: Props) {
         <p className="mt-2 text-sm text-muted-foreground">
           {t.products.catalogUnavailableLead}
         </p>
-        <Link
+        <LocaleLink
           href="/contact"
           className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
         >
           {t.common.callUs}
-        </Link>
+        </LocaleLink>
       </div>
     )
   }

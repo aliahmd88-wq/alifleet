@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { useStore } from '@/lib/store-context'
@@ -100,12 +100,12 @@ export function SiteFooter() {
               <ul className="flex flex-col gap-2.5">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
+                    <LocaleLink
                       href={link.href}
                       className="text-sm text-muted-foreground transition-colors hover:text-primary"
                     >
                       {link.label}
-                    </Link>
+                    </LocaleLink>
                   </li>
                 ))}
               </ul>
@@ -118,24 +118,24 @@ export function SiteFooter() {
             © {new Date().getFullYear()} {store.name}. {t.footer.rights}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link
+            <LocaleLink
               href="/privacy-policy"
               className="transition-colors hover:text-foreground"
             >
               {locale === 'ar' ? 'سياسة الخصوصية' : locale === 'he' ? 'מדיניות הפרטיות' : 'Privacy Policy'}
-            </Link>
-            <Link
+            </LocaleLink>
+            <LocaleLink
               href="/terms"
               className="transition-colors hover:text-foreground"
             >
               {locale === 'ar' ? 'الشروط والأحكام' : locale === 'he' ? 'תנאים והגבלות' : 'Terms & Conditions'}
-            </Link>
-            <Link
+            </LocaleLink>
+            <LocaleLink
               href="/return-policy"
               className="transition-colors hover:text-foreground"
             >
               {locale === 'ar' ? 'سياسة الإرجاع والاستبدال' : locale === 'he' ? 'מדיניות החזרה והחלפה' : 'Refund & Returns'}
-            </Link>
+            </LocaleLink>
           </div>
           <p>{t.footer.slogan}</p>
         </div>

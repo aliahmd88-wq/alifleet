@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -61,12 +61,12 @@ export function LoginForm() {
         />
 
         <div className="flex items-center justify-between gap-4">
-          <Link
+          <LocaleLink
             href="/account/forgot-password"
             className="text-sm text-accent underline-offset-4 transition-colors hover:underline"
           >
             {t.account.login.forgotLink}
-          </Link>
+          </LocaleLink>
         </div>
 
         <button
@@ -89,12 +89,12 @@ export function LoginForm() {
 
         <p className="text-center text-sm text-muted-foreground">
           {t.account.login.noAccount}{' '}
-          <Link
+          <LocaleLink
             href="/account/register"
             className="text-accent underline-offset-4 transition-colors hover:underline"
           >
             {t.account.login.registerLink}
-          </Link>
+          </LocaleLink>
         </p>
       </div>
     </form>

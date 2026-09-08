@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { BlogCard } from '@/components/blog-card'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -65,10 +65,10 @@ export function BlogArticle({ post, related }: { post: BlogPost; related: BlogPo
     <main className="min-h-screen bg-background pt-28 md:pt-36">
       <article>
         <header className="mx-auto flex max-w-4xl flex-col gap-6 px-6 text-start md:px-8">
-          <Link href="/blog" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+          <LocaleLink href="/blog" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
             <BackIcon className="size-4" aria-hidden="true" />
             {t.blog.backToBlog}
-          </Link>
+          </LocaleLink>
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-wider text-accent">
             <span className="rounded-full bg-accent/10 px-3 py-1.5">{t.blog.categories[post.category]}</span>
             <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -127,9 +127,9 @@ export function BlogArticle({ post, related }: { post: BlogPost; related: BlogPo
               <h2 className="text-2xl font-semibold text-primary-foreground md:text-3xl">{copy.cta}</h2>
               <p className="mt-2 leading-relaxed text-primary-foreground/65">{copy.ctaLead}</p>
             </div>
-            <Link href="/contact" className="shrink-0 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition-transform hover:-translate-y-0.5">
+            <LocaleLink href="/contact" className="shrink-0 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground transition-transform hover:-translate-y-0.5">
               {copy.contact}
-            </Link>
+            </LocaleLink>
           </div>
         </aside>
       </article>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowLeft, Loader2, Send } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { forgotPasswordAction } from '@/lib/auth/actions'
@@ -26,13 +26,13 @@ export function ForgotPasswordForm() {
           <h2 className="font-serif text-xl tracking-tight text-foreground">
             {t.account.forgot.successTitle}
           </h2>
-          <Link
+          <LocaleLink
             href="/account/login"
             className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-secondary px-6 py-3 text-sm font-medium text-secondary-foreground transition-opacity hover:opacity-90"
           >
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             {t.account.forgot.backToLogin}
-          </Link>
+          </LocaleLink>
         </div>
       </div>
     )
@@ -79,12 +79,12 @@ export function ForgotPasswordForm() {
           )}
         </button>
 
-        <Link
+        <LocaleLink
           href="/account/login"
           className="text-center text-sm text-accent underline-offset-4 transition-colors hover:underline"
         >
           {t.account.forgot.backToLogin}
-        </Link>
+        </LocaleLink>
       </div>
     </form>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowRight, MapPin, Package, UserRound } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { localeMeta } from '@/lib/i18n/config'
@@ -113,7 +113,7 @@ export function DashboardView({
             {t.account.dashboard.recentOrders}
           </h2>
           {customer.orders.length > 0 ? (
-            <Link
+            <LocaleLink
               href="/account/orders"
               className="inline-flex items-center gap-2 text-sm text-accent underline-offset-4 transition-colors hover:underline"
             >
@@ -122,7 +122,7 @@ export function DashboardView({
                 className="h-4 w-4 rtl:rotate-180"
                 aria-hidden="true"
               />
-            </Link>
+            </LocaleLink>
           ) : null}
         </div>
 
@@ -145,7 +145,7 @@ export function DashboardView({
               <p className="mx-auto mt-2 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
                 {t.account.dashboard.noOrdersLead}
               </p>
-              <Link
+              <LocaleLink
                 href="/products"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
               >
@@ -154,7 +154,7 @@ export function DashboardView({
                   className="h-4 w-4 rtl:rotate-180"
                   aria-hidden="true"
                 />
-              </Link>
+              </LocaleLink>
             </div>
           )}
         </div>
@@ -169,7 +169,7 @@ export function DashboardView({
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           {quickLinks.map(({ href, label, lead, Icon }) => (
-            <Link
+            <LocaleLink
               key={href}
               href={href}
               className="group rounded-3xl bg-card p-5 ring-1 ring-border transition-colors hover:bg-secondary"
@@ -179,7 +179,7 @@ export function DashboardView({
               <p className="mt-1.5 text-pretty text-xs leading-relaxed text-muted-foreground">
                 {lead}
               </p>
-            </Link>
+            </LocaleLink>
           ))}
         </div>
       </section>

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { usePathname } from 'next/navigation'
 import { LayoutGrid, MapPin, Package, UserRound } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -22,7 +22,7 @@ export function AccountNav() {
       {items.map(({ href, key, Icon }) => {
         const active = pathname === href
         return (
-          <Link
+          <LocaleLink
             key={href}
             href={href}
             aria-current={active ? 'page' : undefined}
@@ -34,7 +34,7 @@ export function AccountNav() {
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {t.account.nav[key]}
-          </Link>
+          </LocaleLink>
         )
       })}
 

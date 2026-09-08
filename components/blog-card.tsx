@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowUpRight, Clock } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import type { BlogPost, BlogCategory } from '@/lib/data/blog'
@@ -44,7 +44,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
 
   if (featured) {
     return (
-      <Link
+      <LocaleLink
         href={`/blog/${post.slug}`}
         className="group relative flex flex-col overflow-hidden rounded-3xl bg-primary lg:flex-row lg:min-h-[480px]"
         aria-label={title}
@@ -103,12 +103,12 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
             </div>
           </div>
         </div>
-      </Link>
+      </LocaleLink>
     )
   }
 
   return (
-    <Link
+    <LocaleLink
       href={`/blog/${post.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg hover:shadow-foreground/5"
       aria-label={title}
@@ -152,6 +152,6 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
         </span>
       </div>
-    </Link>
+    </LocaleLink>
   )
 }

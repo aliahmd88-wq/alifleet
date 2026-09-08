@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import LocaleLink from '@/components/locale-link'
 import { ArrowUpRight } from 'lucide-react'
 import type { PartSummary } from '@/lib/data/parts'
 import { useLanguage } from '@/lib/i18n/language-context'
@@ -21,7 +21,7 @@ export function ProductCard({ part }: { part: PartSummary }) {
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-3xl bg-card ring-1 ring-border transition-shadow hover:shadow-xl hover:shadow-foreground/5">
-      <Link
+      <LocaleLink
         href={`/products/${part.slug}`}
         className="relative block aspect-4/3 overflow-hidden bg-secondary"
       >
@@ -41,7 +41,7 @@ export function ProductCard({ part }: { part: PartSummary }) {
         >
           {part.inStock ? t.common.inStock : t.common.outOfStock}
         </span>
-      </Link>
+      </LocaleLink>
 
       <div className="flex flex-1 flex-col p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -52,9 +52,9 @@ export function ProductCard({ part }: { part: PartSummary }) {
           className="mt-2 text-pretty text-base font-semibold leading-snug text-foreground"
           lang={nameLang}
         >
-          <Link href={`/products/${part.slug}`} className="hover:text-accent">
+          <LocaleLink href={`/products/${part.slug}`} className="hover:text-accent">
             {part.name[locale]}
-          </Link>
+          </LocaleLink>
         </h3>
         {part.sku && (
           <p className="mt-1.5 font-mono text-xs text-muted-foreground" dir="ltr">
@@ -67,13 +67,13 @@ export function ProductCard({ part }: { part: PartSummary }) {
             {part.price > 0 ? formatPrice(part.price, store.currency) : t.common.onRequest}
           </p>
           <div className="flex items-center gap-2">
-            <Link
+            <LocaleLink
               href={`/products/${part.slug}`}
               aria-label={`${t.common.viewDetails}: ${part.name[locale]}`}
               className="flex size-9 items-center justify-center rounded-full ring-1 ring-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <ArrowUpRight className="size-4" aria-hidden="true" data-flip-rtl />
-            </Link>
+            </LocaleLink>
             <AddToCartButton slug={part.slug} size="sm" disabled={!part.inStock} />
           </div>
         </div>
