@@ -7,7 +7,6 @@ import {
   Cairo,
   Noto_Sans_Hebrew,
 } from 'next/font/google'
-import { cookies } from 'next/headers'
 import './globals.css'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { BackToTop } from '@/components/back-to-top'
@@ -21,12 +20,8 @@ import { siteUrl } from '@/lib/seo'
 import { serializeJsonLd } from '@/lib/json-ld'
 import { getStoreSettings } from '@/lib/wp/settings'
 import { isWpConfigured } from '@/lib/wp/config'
-import {
-  LOCALE_STORAGE_KEY,
-  defaultLocale,
-  isLocale,
-  localeMeta,
-} from '@/lib/i18n/config'
+import { localeMeta } from '@/lib/i18n/config'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -119,10 +114,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Read the visitor's saved language on the server so the first paint already
-  // has the right lang/dir — no flash of the wrong direction.
-  const stored = (await cookies()).get(LOCALE_STORAGE_KEY)?.value
-  const locale = isLocale(stored) ? stored : defaultLocale
+  // The proxy resolves indexed URL locales before the cookie, so the first
+  // paint always has the canonical language and direction.
+  const locale = await getRequestLocale()
   const meta = localeMeta[locale]
 
   // Resolve the session and the store settings once per request so the header

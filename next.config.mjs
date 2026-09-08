@@ -65,9 +65,8 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const nextConfig = {
-  // WooCommerce canonicalizes checkout with a trailing slash while the
-  // Next.js proxy route accepts both forms. Let the route handle that
-  // canonicalization instead of creating a redirect loop.
+  // Canonical public paths end in a slash, while private and proxy routes keep
+  // their existing shape. The locale proxy owns that distinction.
   skipTrailingSlashRedirect: true,
   images: {
     // Optimization is ON: WordPress images arrive through the same-origin
@@ -91,72 +90,6 @@ const nextConfig = {
       { protocol: 'http', hostname: '*.sslip.io' },
     ],
     minimumCacheTTL: 604800,
-  },
-  async redirects() {
-    return [
-      // /import was the vehicle page until the section was split into "for
-      // sale" and "import" under /cars. Preserve indexed and shared URLs.
-      { source: '/import', destination: '/cars', permanent: true },
-      {
-        source: '/import/:slug',
-        destination: '/cars/import/:slug',
-        permanent: true,
-      },
-      // Privacy Policy multilingual routes
-      { source: '/privacy', destination: '/privacy-policy', permanent: true },
-      { source: '/privacy-policy-ar', destination: '/privacy-policy?locale=ar', permanent: true },
-      { source: '/privacy-policy-en', destination: '/privacy-policy?locale=en', permanent: true },
-      { source: '/privacy-policy-he', destination: '/privacy-policy?locale=he', permanent: true },
-      { source: '/ar/privacy-policy', destination: '/privacy-policy?locale=ar', permanent: true },
-      { source: '/en/privacy-policy', destination: '/privacy-policy?locale=en', permanent: true },
-      { source: '/he/privacy-policy', destination: '/privacy-policy?locale=he', permanent: true },
-      { source: '/ar/privacy-policy-ar', destination: '/privacy-policy?locale=ar', permanent: true },
-      { source: '/en/privacy-policy-en', destination: '/privacy-policy?locale=en', permanent: true },
-      { source: '/he/privacy-policy-he', destination: '/privacy-policy?locale=he', permanent: true },
-
-      // Terms & Conditions multilingual routes
-      { source: '/terms-ar', destination: '/terms?locale=ar', permanent: true },
-      { source: '/terms-en', destination: '/terms?locale=en', permanent: true },
-      { source: '/terms-he', destination: '/terms?locale=he', permanent: true },
-      { source: '/ar/terms', destination: '/terms?locale=ar', permanent: true },
-      { source: '/en/terms', destination: '/terms?locale=en', permanent: true },
-      { source: '/he/terms', destination: '/terms?locale=he', permanent: true },
-      { source: '/ar/terms-ar', destination: '/terms?locale=ar', permanent: true },
-      { source: '/en/terms-en', destination: '/terms?locale=en', permanent: true },
-      { source: '/he/terms-he', destination: '/terms?locale=he', permanent: true },
-      { source: '/ar/terms-and-conditions', destination: '/terms?locale=ar', permanent: true },
-      { source: '/en/terms-and-conditions', destination: '/terms?locale=en', permanent: true },
-      { source: '/he/terms-and-conditions', destination: '/terms?locale=he', permanent: true },
-      { source: '/ar/terms-conditions', destination: '/terms?locale=ar', permanent: true },
-      { source: '/en/terms-conditions', destination: '/terms?locale=en', permanent: true },
-      { source: '/he/terms-conditions', destination: '/terms?locale=he', permanent: true },
-
-      // Refund & Returns multilingual routes
-      { source: '/return-policy-ar', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/return-policy-en', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/return-policy-he', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/refund-returns-ar', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/refund-returns-en', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/refund-returns-he', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/refund-and-returns-ar', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/refund-and-returns-en', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/refund-and-returns-he', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/ar/return-policy', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/en/return-policy', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/he/return-policy', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/ar/return-policy-ar', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/en/return-policy-en', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/he/return-policy-he', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/ar/refund-returns', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/en/refund-returns', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/he/refund-returns', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/ar/refund-and-returns', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/en/refund-and-returns', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/he/refund-and-returns', destination: '/return-policy?locale=he', permanent: true },
-      { source: '/ar/refund_returns', destination: '/return-policy?locale=ar', permanent: true },
-      { source: '/en/refund_returns', destination: '/return-policy?locale=en', permanent: true },
-      { source: '/he/refund_returns', destination: '/return-policy?locale=he', permanent: true },
-    ]
   },
   async headers() {
     return [
