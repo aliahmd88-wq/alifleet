@@ -29,7 +29,7 @@ export function SaleBrowser({ cars, status, copy }: Props) {
   const [condition, setCondition] = useState<SaleCarCondition | 'all'>('all')
   const [carStatus, setCarStatus] = useState<SaleCarStatus | 'all'>('all')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 6 // 2 rows × 3 cols
+  const PAGE_SIZE = 24 // 8 rows × 3 cols: the whole import range on one or two pages
 
   const filtered = useMemo(
     () =>

@@ -23,7 +23,7 @@ export function ImportBrowser({ cars, status, copy }: Props) {
   const [origin, setOrigin] = useState<CarOrigin | 'all'>('all')
   const [carStatus, setCarStatus] = useState<CarStatus | 'all'>('all')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 6 // 2 rows × 3 cols
+  const PAGE_SIZE = 24 // 8 rows × 3 cols: the whole import range on one or two pages
 
   const filtered = useMemo(
     () =>
