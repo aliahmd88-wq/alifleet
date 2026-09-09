@@ -66,7 +66,7 @@ export function SiteFooter() {
         { label: t.footer.servicesLinks.import, href: '/cars#import' },
         { label: t.footer.servicesLinks.parts, href: '/products' },
         { label: t.footer.servicesLinks.consulting, href: '/contact' },
-        { label: t.footer.servicesLinks.support, href: '/contact' },
+        { label: t.footer.servicesLinks.support, href: '/return-policy' },
       ],
     },
     {

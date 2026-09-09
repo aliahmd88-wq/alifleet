@@ -4,16 +4,21 @@ import { SiteFooter } from '@/components/site-footer'
 import { PolicyScreen } from '@/components/policy-screen'
 import { getPrivacyPolicy } from '@/lib/wp/policies'
 import { isLocale } from '@/lib/i18n/config'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import { pageAlternates } from '@/lib/seo/alternates'
 
 export const revalidate = 600
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | سياسة الخصوصية | ALI FLEET',
-  description:
-    'Official privacy policy and data protection terms for ALI FLEET customers, visitors, and commercial vehicle clients.',
-  alternates: {
-    canonical: '/privacy-policy',
-  },
+/** Title, description, canonical and hreflang follow the visitor's language. */
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
+  const t = getDictionary(locale)
+  return {
+    title: t.seo.privacyTitle,
+    description: t.seo.privacyDescription,
+    alternates: pageAlternates('/privacy-policy/', locale),
+  }
 }
 
 type PageProps = {

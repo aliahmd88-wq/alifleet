@@ -4,16 +4,21 @@ import { SiteFooter } from '@/components/site-footer'
 import { PolicyScreen } from '@/components/policy-screen'
 import { getReturnPolicy } from '@/lib/wp/policies'
 import { isLocale } from '@/lib/i18n/config'
+import { getDictionary } from '@/lib/i18n/dictionaries'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import { pageAlternates } from '@/lib/seo/alternates'
 
 export const revalidate = 600
 
-export const metadata: Metadata = {
-  title: 'Refund & Returns Policy | سياسة الإرجاع والاستبدال | ALI FLEET',
-  description:
-    'Official refund, return, and exchange policy for ALI FLEET spare parts, equipment, and vehicle purchases.',
-  alternates: {
-    canonical: '/return-policy',
-  },
+/** Title, description, canonical and hreflang follow the visitor's language. */
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
+  const t = getDictionary(locale)
+  return {
+    title: t.seo.returnsTitle,
+    description: t.seo.returnsDescription,
+    alternates: pageAlternates('/return-policy/', locale),
+  }
 }
 
 type PageProps = {
