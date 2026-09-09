@@ -43,6 +43,10 @@ def names(tid, q, brand, model, side):
     en = f"{en_core} – {SIDES[side]['en']}" if side else en_core
     return he, ar, en
 
+# The owner wants the quality level visible in the name itself (2026-09-09):
+# high-quality aftermarket, direct replacement, backed by the 3-month warranty.
+QUALITY_SUFFIX = {'he': ' – תחליפי איכותי', 'ar': ' – بديل بجودة عالية', 'en': ' – premium aftermarket'}
+
 MODEL_WORDS = {'ar': [('טון', 'طن'), ('יורו', 'يورو')], 'en': [('טון', 'ton'), ('יורו', 'Euro')], 'he': []}
 
 def localize_model(model, lang):
@@ -98,19 +102,21 @@ def descriptions(name, brand, model, side, sku, tid=None, compat=None):
     v_he, v_ar, v_en = vehicle(brand, model, 'he'), vehicle(brand, model, 'ar'), vehicle(brand, model, 'en')
     s_he, s_ar, s_en = (SIDE_SENTENCE[l].get(side, '') for l in ('he', 'ar', 'en'))
     aka = {l: aka_line(tid, l) if tid else '' for l in ('he', 'ar', 'en')}; fits = {l: fits_line(compat or [], l) for l in ('he', 'ar', 'en')}
-    he = (f"{name['he']} – חלק חילוף חדש (תחליפי, לא מקורי){' ל' + v_he if v_he else ''}. {fits['he']}{s_he}{aka['he']}"
-          f"מק\"ט: {sku}. מיועד להחלפה ישירה של החלק המקורי; לפני ההזמנה מומלץ לאמת התאמה לפי שנת הייצור ומספר השלדה, "
-          f"ונשמח לבדוק עבורכם בוואטסאפ. אחריות 3 חודשים, אספקה לכל הארץ ואפשרות איסוף מהמחסן בריינה. "
+    he = (f"{name['he']} – חלק חילוף חדש באיכות גבוהה (תחליפי ברמת החלק המקורי){' ל' + v_he if v_he else ''}. {fits['he']}{s_he}{aka['he']}"
+          f"מק\"ט: {sku}. מיוצר לפי מידות החלק המקורי להתקנה ישירה ללא התאמות, ומגיע עם אחריות 3 חודשים מיום הרכישה. "
+          f"לפני התשלום אנחנו מאשרים התאמה לפי שנת הייצור ומספר השלדה (VIN) בוואטסאפ, כך שלא תקבלו חלק שלא מתאים. "
+          f"אספקה מהירה לכל הארץ ואפשרות איסוף מהמחסן בריינה. "
           f"ALI FLEET מייבאת חלפים למשאיות מאירופה, ארה\"ב וקנדה עם מלאי זמין ומשלוח מהיר.")
-    ar = (f"{name['ar']} – قطعة غيار جديدة (بديلة، غير أصلية){' لشاحنات ' + v_ar if v_ar else ''}. {fits['ar']}{s_ar}{aka['ar']}"
+    ar = (f"{name['ar']} – قطعة غيار جديدة بجودة عالية (بديلة بمواصفات القطعة الأصلية){' لشاحنات ' + v_ar if v_ar else ''}. {fits['ar']}{s_ar}{aka['ar']}"
           f"رقم القطعة: {sku}. تُركَّب مكان القطعة الأصلية مباشرة؛ ننصح بالتأكد من التوافق حسب سنة الصنع ورقم الشاصي قبل الطلب، "
           f"ويسعدنا التحقق لك عبر واتساب. ضمان 3 أشهر، توصيل لكل أنحاء البلاد، وإمكانية الاستلام من مخزننا في الرينة. "
           f"علي فليت تستورد قطع غيار الشاحنات من أوروبا وأمريكا وكندا بمخزون متوفر وشحن سريع.")
-    en = (f"{name['en']} – new aftermarket replacement part{' for ' + v_en + ' trucks' if v_en else ''}. {fits['en']}{s_en}{aka['en']}"
-          f"Part number: {sku}. Direct replacement for the original part; please confirm fitment by production year and VIN "
-          f"before ordering and we will gladly check it for you on WhatsApp. 3-month warranty, delivery across Israel, "
+    en = (f"{name['en']} – new premium aftermarket part (OEM-replacement quality){' for ' + v_en + ' trucks' if v_en else ''}. {fits['en']}{s_en}{aka['en']}"
+          f"Part number: {sku}. Made to the original part's dimensions for a direct fit with no modifications, and backed by a 3-month warranty "
+          f"from the purchase date. Before you pay we confirm fitment by production year and VIN on WhatsApp, so you never receive a part that does not fit. "
+          f"Fast delivery across Israel "
           f"and pickup from our warehouse in Reineh. ALI FLEET imports truck parts from Europe, the USA and Canada with stock on hand and fast shipping.")
-    short_he = f"{name['he']} חדש, תחליפי, עם אחריות 3 חודשים ואספקה לכל הארץ. מק\"ט {sku}."
+    short_he = f"{name['he']}: חדש, באיכות גבוהה, התקנה ישירה ללא התאמות, אחריות 3 חודשים ואספקה לכל הארץ. מק\"ט {sku}."
     return he, ar, en, short_he
 
 def specs(tid, brand, model, side):
@@ -122,8 +128,10 @@ def specs(tid, brand, model, side):
     if model: row('דגם', 'الطراز', 'Model', model, localize_model(model, 'ar'), localize_model(model, 'en'))
     if side: row('צד', 'الجهة', 'Side', SIDES[side]['he'], SIDES[side]['ar'], SIDES[side]['en'])
     row('סוג החלק', 'نوع القطعة', 'Part type', ty['he'], ty['ar'], ty['en'])
-    row('מצב', 'الحالة', 'Condition', 'חדש, תחליפי (לא מקורי)', 'جديدة، بديلة (غير أصلية)', 'New, aftermarket')
-    row('אחריות', 'الضمان', 'Warranty', '3 חודשים', '3 أشهر', '3 months')
+    row('מצב', 'الحالة', 'Condition', 'חדש', 'جديدة', 'New')
+    row('איכות', 'الجودة', 'Quality', 'תחליפי איכותי ברמת החלק המקורי', 'بديل بجودة عالية بمواصفات الأصلي', 'Premium aftermarket, OEM-replacement')
+    row('אחריות', 'الضمان', 'Warranty', '3 חודשים מיום הרכישה', '3 أشهر من تاريخ الشراء', '3 months from purchase')
+    row('התאמה', 'التوافق', 'Fitment', 'אישור לפי VIN לפני התשלום', 'تأكيد حسب رقم الشاصي قبل الدفع', 'Confirmed by VIN before payment')
     return out[:8]
 
 payload, skipped, problems = [], [], []
@@ -143,7 +151,9 @@ for r in rows:
     if clean(r['new_name_he']) and clean(r['new_name_he']) != proposed_he: he = clean(r['new_name_he'])
     if clean(r['new_name_ar']) and clean(r['new_name_ar']) != proposed_ar: ar = clean(r['new_name_ar'])
     if clean(r['new_name_en']) and clean(r['new_name_en']) != proposed_en: en = clean(r['new_name_en'])
-    name = {'he': he, 'ar': ar, 'en': en}
+    # Quality marker goes on after the owner-override decision so it never masks an owner edit.
+    name = {'he': he + QUALITY_SUFFIX['he'], 'ar': ar + QUALITY_SUFFIX['ar'], 'en': en + QUALITY_SUFFIX['en']}
+    he, ar, en = name['he'], name['ar'], name['en']
     sku = p['sku'] or r['sku']
     cat = clean(r['part_category']) or TYPES[tid]['cat']
     compat = [c.strip() for c in (r.get('compat_models') or '').split('|') if c.strip()] or ([vehicle(brand, model, 'en')] if (model and brand) else [])
