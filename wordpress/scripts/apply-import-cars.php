@@ -47,7 +47,8 @@ foreach ( $data['vehicles'] as $v ) {
 	update_field( 'mileage', (int) $v['mileage'], $id );
 	update_field( 'price', '' === $v['price'] ? null : (float) $v['price'], $id );
 	update_field( 'featured', (bool) $v['featured'], $id );
-	if ( ! empty( $v['featured_image'] ) && get_post( (int) $v['featured_image'] ) ) {
+	// Only seed the illustrative render when the post has no photo yet; real photos attached later must survive re-runs.
+	if ( ! empty( $v['featured_image'] ) && ! has_post_thumbnail( $id ) && get_post( (int) $v['featured_image'] ) ) {
 		update_field( 'featured_image', (int) $v['featured_image'], $id );
 		set_post_thumbnail( $id, (int) $v['featured_image'] );
 	}

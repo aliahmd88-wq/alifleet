@@ -18,6 +18,9 @@ const statusStyles: Record<ImportCar['status'], string> = {
 
 export function ImportCarCard({ car }: { car: ImportCar }) {
   const { t, locale } = useLanguage()
+  // Localized name first (what customers search for), the Latin model name underneath.
+  const name = car.subtitle[locale] || car.model
+  const secondary = name === car.model ? '' : car.model
   const store = useStore()
 
   return (
@@ -50,11 +53,11 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
 
         <h3 className="mt-2 text-pretty text-lg font-semibold leading-snug text-foreground">
           <LocaleLink href={`/cars/import/${car.slug}`} className="hover:text-accent">
-            {car.model}
+            {name}
           </LocaleLink>
         </h3>
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
-          {car.subtitle[locale]}
+          {secondary}
         </p>
 
         <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">

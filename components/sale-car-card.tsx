@@ -17,6 +17,9 @@ const statusStyles: Record<SaleCar['status'], string> = {
 
 export function SaleCarCard({ car }: { car: SaleCar }) {
   const { t, locale } = useLanguage()
+  // Localized name first (what customers search for), the Latin model name underneath.
+  const name = car.subtitle[locale] || car.model
+  const secondary = name === car.model ? '' : car.model
   const store = useStore()
 
   // A brand-new car has no meaningful odometer reading, so showing "0 km"
@@ -52,11 +55,11 @@ export function SaleCarCard({ car }: { car: SaleCar }) {
 
         <h3 className="mt-2 text-pretty text-lg font-semibold leading-snug text-foreground">
           <LocaleLink href={`/cars/sale/${car.slug}`} className="hover:text-accent">
-            {car.model}
+            {name}
           </LocaleLink>
         </h3>
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
-          {car.subtitle[locale]}
+          {secondary}
         </p>
 
         <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">

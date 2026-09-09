@@ -21,6 +21,32 @@ GEAR = {'auto': {'he': 'תיבת הילוכים אוטומטית', 'ar': 'ناق
         'manual': {'he': 'תיבת הילוכים ידנית', 'ar': 'ناقل حركة يدوي', 'en': 'manual gearbox'}}
 ETA = {'he': '4–6 שבועות', 'ar': '4–6 أسابيع', 'en': '4–6 weeks'}
 
+
+# Localized names shown as the card/detail title (what Israeli customers type into Google);
+# the Latin `model` stays underneath. Hebrew names are the post titles above.
+NAME_AR = {
+ 'mercedes-sprinter-519-minibus-20-seats': 'مرسيدس-بنز سبرينتر 519 ميني باص 20 مقعداً', 'mercedes-sprinter-517-minibus-14-seats': 'مرسيدس-بنز سبرينتر 517 ميني باص 14 مقعداً',
+ 'mercedes-sprinter-519-panel-van': 'مرسيدس-بنز سبرينتر 519 فان مغلق', 'mercedes-sprinter-517-panel-van': 'مرسيدس-بنز سبرينتر 517 فان مغلق', 'mercedes-sprinter-317-panel-van': 'مرسيدس-بنز سبرينتر 317 فان مغلق',
+ 'mercedes-sprinter-315-compact': 'مرسيدس-بنز سبرينتر 315 كومباكت', 'mercedes-sprinter-519-single-cab-chassis': 'مرسيدس-بنز سبرينتر 519 شاسيه كابينة مفردة', 'mercedes-sprinter-519-double-cab-chassis': 'مرسيدس-بنز سبرينتر 519 شاسيه كابينة مزدوجة',
+ 'mercedes-vito-panel-van': 'مرسيدس-بنز فيتو فان مغلق', 'man-tge-panel-van': 'مان TGE فان مغلق', 'man-tge-single-cab-chassis': 'مان TGE شاسيه كابينة مفردة', 'man-tge-double-cab-chassis': 'مان TGE شاسيه كابينة مزدوجة',
+ 'volkswagen-crafter-panel-van': 'فولكس فاجن كرافتر فان مغلق', 'fiat-ducato-panel-van': 'فيات دوكاتو فان مغلق', 'peugeot-boxer-panel-van': 'بيجو بوكسر فان مغلق', 'fiat-scudo-m-panel-van': 'فيات سكودو M فان مغلق',
+ 'fiat-scudo-l-panel-van': 'فيات سكودو L فان مغلق', 'fiat-doblo-panel-van': 'فيات دوبلو فان مغلق', 'citroen-berlingo-panel-van': 'سيتروين بيرلينغو فان مغلق', 'citroen-jumpy-panel-van': 'سيتروين جامبي فان مغلق',
+ 'renault-master-panel-van': 'رينو ماستر فان مغلق', 'renault-trafic-panel-van': 'رينو ترافيك فان مغلق', 'iveco-daily-52-tonne': 'إيفيكو ديلي 5.2 طن', 'isuzu-truck-75-tonne': 'شاحنة إيسوزو 7.5 طن',
+ 'isuzu-d-max-4x4-ls-premium': 'إيسوزو دي ماكس 4x4 LS بريميوم', 'chevrolet-silverado-ev-wt': 'شيفروليه سيلفرادو EV Work Truck ماكس رينج 2026', 'ram-2500-heavy-duty': 'رام 2500 هيفي ديوتي', 'ford-f-250-super-duty': 'فورد F-250 سوبر ديوتي',
+ 'maxus-edeliver-9-electric-van': 'ماكسوس eDeliver 9 فان كهربائي', 'maxus-edeliver-3-short-electric-van': 'ماكسوس eDeliver 3 قصير فان كهربائي', 'maxus-edeliver-3-long-electric-van': 'ماكسوس eDeliver 3 طويل فان كهربائي', 'farizon-supervan-electric': 'فاريزون سوبر فان كهربائي',
+}
+NAME_EN = {
+ 'mercedes-sprinter-519-minibus-20-seats': 'Mercedes-Benz Sprinter 519 minibus, 20 seats', 'mercedes-sprinter-517-minibus-14-seats': 'Mercedes-Benz Sprinter 517 minibus, 14 seats',
+ 'mercedes-sprinter-519-panel-van': 'Mercedes-Benz Sprinter 519 panel van', 'mercedes-sprinter-517-panel-van': 'Mercedes-Benz Sprinter 517 panel van', 'mercedes-sprinter-317-panel-van': 'Mercedes-Benz Sprinter 317 panel van',
+ 'mercedes-sprinter-315-compact': 'Mercedes-Benz Sprinter 315 compact van', 'mercedes-sprinter-519-single-cab-chassis': 'Mercedes-Benz Sprinter 519 single cab chassis', 'mercedes-sprinter-519-double-cab-chassis': 'Mercedes-Benz Sprinter 519 double cab chassis',
+ 'mercedes-vito-panel-van': 'Mercedes-Benz Vito panel van', 'man-tge-panel-van': 'MAN TGE panel van', 'man-tge-single-cab-chassis': 'MAN TGE single cab chassis', 'man-tge-double-cab-chassis': 'MAN TGE double cab chassis',
+ 'volkswagen-crafter-panel-van': 'Volkswagen Crafter panel van', 'fiat-ducato-panel-van': 'Fiat Ducato panel van', 'peugeot-boxer-panel-van': 'Peugeot Boxer panel van', 'fiat-scudo-m-panel-van': 'Fiat Scudo M panel van',
+ 'fiat-scudo-l-panel-van': 'Fiat Scudo L panel van', 'fiat-doblo-panel-van': 'Fiat Doblò panel van', 'citroen-berlingo-panel-van': 'Citroën Berlingo panel van', 'citroen-jumpy-panel-van': 'Citroën Jumpy panel van',
+ 'renault-master-panel-van': 'Renault Master panel van', 'renault-trafic-panel-van': 'Renault Trafic panel van', 'iveco-daily-52-tonne': 'Iveco Daily 5.2 t', 'isuzu-truck-75-tonne': 'Isuzu N-Series 7.5 t truck',
+ 'isuzu-d-max-4x4-ls-premium': 'Isuzu D-Max 4x4 LS Premium', 'chevrolet-silverado-ev-wt': 'Chevrolet Silverado EV Work Truck Max Range 2026', 'ram-2500-heavy-duty': 'RAM 2500 Heavy Duty', 'ford-f-250-super-duty': 'Ford F-250 Super Duty',
+ 'maxus-edeliver-9-electric-van': 'Maxus eDeliver 9 electric van', 'maxus-edeliver-3-short-electric-van': 'Maxus eDeliver 3 short electric van', 'maxus-edeliver-3-long-electric-van': 'Maxus eDeliver 3 long electric van', 'farizon-supervan-electric': 'Farizon SuperVan electric',
+}
+
 V = []
 def add(slug, model, title_he, body, img, origin, year, fuel, gear, engine, hp, *, seats=None, gvw=None, payload=None, drive='', sub, note, extra=None):
     V.append(dict(slug=slug, model=model, title_he=title_he, body=body, img=IMG[img], origin=origin, year=year, fuel=fuel, gear=gear,
@@ -150,13 +176,13 @@ def desc(v):
         cap = {'he': f" משקל כולל מורשה {v['gvw']:,} ק\"ג.", 'ar': f" الوزن الإجمالي {v['gvw']:,} كغ.", 'en': f" Gross weight {v['gvw']:,} kg."}
     drive = {'he': ' הנעה כפולה 4x4.' if v['drive'] == '4x4' else '', 'ar': ' دفع رباعي 4x4.' if v['drive'] == '4x4' else '', 'en': ' 4x4 drive.' if v['drive'] == '4x4' else ''}
     return {
-        'he': f"{v['model']} שנת {v['year']}, חדש מהיצרן. {eng['he']}, {gear['he']}.{drive['he']}{cap['he']} {v['note']['he']} "
+        'he': f"{v['title_he']} ({v['model']}) שנת {v['year']}, חדש מהיצרן. {v['sub']['he']}. {eng['he']}, {gear['he']}.{drive['he']}{cap['he']} {v['note']['he']} "
               f"הרכב מגיע בייבוא אישי או ישיר של ALI FLEET מ{reg['he']}, כולל שילוח, מכס, מסים ורישוי בישראל, במחיר סופי שנסגר איתכם לפני ההזמנה. "
               f"זמן אספקה משוער {ETA['he']}. לקבלת הצעת מחיר שלחו לנו הודעה בוואטסאפ עם התצורה שאתם צריכים.",
-        'ar': f"{v['model']} موديل {v['year']}، جديد من المصنع. {eng['ar']}، {gear['ar']}.{drive['ar']}{cap['ar']} {v['note']['ar']} "
+        'ar': f"{NAME_AR[v['slug']]} ({v['model']}) موديل {v['year']}، جديد من المصنع. {v['sub']['ar']}. {eng['ar']}، {gear['ar']}.{drive['ar']}{cap['ar']} {v['note']['ar']} "
               f"تصل المركبة عبر الاستيراد الشخصي أو المباشر من علي فليت من {reg['ar']}، شاملة الشحن والجمارك والضرائب والترخيص في إسرائيل، بسعر نهائي نتفق عليه معك قبل الطلب. "
               f"مدة التوريد المتوقعة {ETA['ar']}. للحصول على عرض سعر أرسل لنا رسالة واتساب مع المواصفات التي تحتاجها.",
-        'en': f"{v['model']}, {v['year']} model year, brand new. {eng['en'][0].upper() + eng['en'][1:]}, {gear['en']}.{drive['en']}{cap['en']} {v['note']['en']} "
+        'en': f"{NAME_EN[v['slug']]} ({v['model']}), {v['year']} model year, brand new. {v['sub']['en']}. {eng['en'][0].upper() + eng['en'][1:]}, {gear['en']}.{drive['en']}{cap['en']} {v['note']['en']} "
               f"ALI FLEET brings it in by personal or direct import from {reg['en']}, including shipping, customs, taxes and Israeli licensing, at a final price agreed with you before you order. "
               f"Estimated delivery {ETA['en']}. Message us on WhatsApp with the configuration you need to get a quote.",
     }
@@ -190,7 +216,7 @@ for v in V:
     vehicles.append({
         'slug': v['slug'], 'title': v['title_he'], 'car_model': v['model'], 'body_type': v['body'], 'origin': v['origin'], 'status': 'available', 'stage': 1,
         'year': v['year'], 'mileage': 0, 'price': '', 'featured': 0, 'featured_image': v['img'],
-        'subtitle': v['sub'], 'description': desc(v), 'highlights': highlights(v),
+        'subtitle': {'he': v['title_he'], 'ar': NAME_AR[v['slug']], 'en': NAME_EN[v['slug']]}, 'description': desc(v), 'highlights': highlights(v),
         'specs': {'engine': engine_label(v), 'transmission': v['gear'], 'fuel': v['fuel'], 'drivetrain': v['drive'] or ('4x2' if v['body'] in ('pickup', 'truck') else ''), 'seats': v['seats'] or ''},
         'eta': ETA,
     })

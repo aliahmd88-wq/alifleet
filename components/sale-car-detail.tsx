@@ -27,6 +27,8 @@ export function SaleCarDetail({
   related: SaleCar[]
 }) {
   const { t, locale } = useLanguage()
+  const name = car.subtitle[locale] || car.model
+  const secondary = name === car.model ? '' : car.model
   const store = useStore()
   const images = [{ src: car.image, alt: car.alt }, ...car.gallery]
   const [active, setActive] = useState(0)
@@ -64,7 +66,7 @@ export function SaleCarDetail({
     { label: t.import.seats, value: String(car.specs.seats), ltr: true },
   ].filter((spec) => spec.value)
 
-  const enquiry = `${t.saleDetail.whatsappIntro}\n\n${car.model} · ${car.year}\n${t.cars.conditions[car.condition]}\n${typeof window === 'undefined' ? '' : window.location.href}`
+  const enquiry = `${t.saleDetail.whatsappIntro}\n\n${name}${secondary ? ` (${secondary})` : ''} · ${car.year}\n${t.cars.conditions[car.condition]}\n${typeof window === 'undefined' ? '' : window.location.href}`
 
   return (
     <>
@@ -126,10 +128,10 @@ export function SaleCarDetail({
               {t.cars.conditions[car.condition]} · {car.bodyType[locale]}
             </p>
             <h1 className="mt-3 text-balance font-serif text-3xl leading-tight tracking-tight text-foreground md:text-5xl">
-              {car.model}
+              {name}
             </h1>
             <p className="mt-3 text-pretty leading-relaxed text-muted-foreground">
-              {car.subtitle[locale]}
+              {secondary}
             </p>
 
             <div className="mt-7 rounded-3xl bg-card p-6 ring-1 ring-border">

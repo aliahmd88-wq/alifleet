@@ -20,11 +20,14 @@ export async function generateMetadata({
   const car = await getVehicle(slug)
   if (!car) return { title: 'Vehicle not found | ALI FLEET' }
 
+  const locale = await getRequestLocale()
+  const name = car.subtitle[locale] || car.model
+  const summary = (car.description[locale] || car.description.en || car.subtitle[locale] || car.model).replace(/\s+/g, ' ').trim()
   return {
-    title: `${car.model} · ${car.year} | ALI FLEET`,
+    title: `${name} · ${car.year} | ALI FLEET`,
     // hreflang + per-language canonical (he at root, ar/en with their suffixes).
-    alternates: pageAlternates(`/cars/import/${slug}/`, await getRequestLocale()),
-    description: car.description.en || car.subtitle.en,
+    alternates: pageAlternates(`/cars/import/${slug}/`, locale),
+    description: summary.length > 158 ? `${summary.slice(0, 155).trimEnd()}…` : summary,
   }
 }
 
