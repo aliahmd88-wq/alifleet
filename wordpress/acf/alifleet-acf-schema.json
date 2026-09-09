@@ -5074,6 +5074,19 @@
         "ui": 1
       },
       {
+        "key": "field_import_vehicle_uses",
+        "label": "Vehicle uses",
+        "name": "vehicle_uses",
+        "type": "checkbox",
+        "instructions": "Optional. Tick what applies; when empty the site derives it from the body type (minibuses and passenger cars → taxi, passenger cars → parallel/personal import).",
+        "choices": {
+          "taxi": "Suitable for taxi / minibus-taxi licensing",
+          "parallel_import": "Parallel or personal import allowed"
+        },
+        "return_format": "value",
+        "layout": "vertical"
+      },
+      {
         "key": "field_car_featured_image",
         "label": "Primary Photo",
         "name": "featured_image",
@@ -6698,6 +6711,19 @@
         "ui_on_text": "",
         "ui_off_text": "",
         "show_in_graphql": 1
+      },
+      {
+        "key": "field_sale_vehicle_uses",
+        "label": "Vehicle uses",
+        "name": "vehicle_uses",
+        "type": "checkbox",
+        "instructions": "Optional. Tick what applies; when empty the site derives it from the body type (minibuses and passenger cars → taxi, passenger cars → parallel/personal import).",
+        "choices": {
+          "taxi": "Suitable for taxi / minibus-taxi licensing",
+          "parallel_import": "Parallel or personal import allowed"
+        },
+        "return_format": "value",
+        "layout": "vertical"
       },
       {
         "key": "field_sale_featured_image",

@@ -20,6 +20,9 @@ import {
 } from '@/lib/data/vehicle-categories'
 
 type Tab = 'new' | 'used'
+/** 'taxi' is a virtual category: every vehicle whose uses include taxi licensing. */
+type NewPick = NewCategory | 'all' | 'taxi'
+type UsedPick = UsedCategory | 'all' | 'taxi'
 
 type Props = {
   newCars: ImportCar[]
@@ -39,8 +42,8 @@ const PAGE_SIZE = 24 // 8 rows × 3 cols
 export function VehicleLineup({ newCars, newStatus, usedCars, usedStatus }: Props) {
   const { t } = useLanguage()
   const [tab, setTab] = useState<Tab>('new')
-  const [newCategory, setNewCategory] = useState<NewCategory | 'all'>('all')
-  const [usedCategory, setUsedCategory] = useState<UsedCategory | 'all'>('all')
+  const [newCategory, setNewCategory] = useState<NewPick>('all')
+  const [usedCategory, setUsedCategory] = useState<UsedPick>('all')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -56,6 +59,9 @@ export function VehicleLineup({ newCars, newStatus, usedCars, usedStatus }: Prop
     return () => window.removeEventListener('hashchange', fromHash)
   }, [])
 
+  const newTaxi = useMemo(() => newCars.filter((car) => car.uses.includes('taxi')).length, [newCars])
+  const usedTaxi = useMemo(() => usedCars.filter((car) => car.uses.includes('taxi')).length, [usedCars])
+
   const newCounts = useMemo(() => {
     const counts: Record<NewCategory, number> = { trucks: 0, work: 0, buses: 0, cars: 0 }
     for (const car of newCars) counts[newCategoryOf(car.bodyTypeKey)] += 1
@@ -69,11 +75,11 @@ export function VehicleLineup({ newCars, newStatus, usedCars, usedStatus }: Prop
   }, [usedCars])
 
   const filteredNew = useMemo(
-    () => newCars.filter((car) => newCategory === 'all' || newCategoryOf(car.bodyTypeKey) === newCategory),
+    () => newCars.filter((car) => newCategory === 'all' || (newCategory === 'taxi' ? car.uses.includes('taxi') : newCategoryOf(car.bodyTypeKey) === newCategory)),
     [newCars, newCategory]
   )
   const filteredUsed = useMemo(
-    () => usedCars.filter((car) => usedCategory === 'all' || usedCategoryOf(car.bodyTypeKey) === usedCategory),
+    () => usedCars.filter((car) => usedCategory === 'all' || (usedCategory === 'taxi' ? car.uses.includes('taxi') : usedCategoryOf(car.bodyTypeKey) === usedCategory)),
     [usedCars, usedCategory]
   )
 
@@ -199,6 +205,9 @@ export function VehicleLineup({ newCars, newStatus, usedCars, usedStatus }: Prop
                 {NEW_LABELS[category]} <span dir="ltr" className="opacity-70">({newCounts[category]})</span>
               </button>
             ))}
+            <button type="button" onClick={() => { setNewCategory('taxi'); setPage(1) }} className={chip(newCategory === 'taxi')}>
+              {t.cars.catTaxi} <span dir="ltr" className="opacity-70">({newTaxi})</span>
+            </button>
           </>
         ) : (
           <>
@@ -210,9 +219,16 @@ export function VehicleLineup({ newCars, newStatus, usedCars, usedStatus }: Prop
                 {USED_LABELS[category]} <span dir="ltr" className="opacity-70">({usedCounts[category]})</span>
               </button>
             ))}
+            <button type="button" onClick={() => { setUsedCategory('taxi'); setPage(1) }} className={chip(usedCategory === 'taxi')}>
+              {t.cars.catTaxi} <span dir="ltr" className="opacity-70">({usedTaxi})</span>
+            </button>
           </>
         )}
       </div>
+
+      {(tab === 'new' ? newCategory : usedCategory) === 'taxi' && (
+        <p className="mt-4 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground">{t.cars.taxiLead}</p>
+      )}
 
       <p className="mt-6 text-sm text-muted-foreground">
         <span dir="ltr">{total}</span> {t.common.resultsCount}

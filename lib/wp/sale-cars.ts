@@ -5,6 +5,7 @@ import { saleCarConditions, saleCarStatuses } from '@/lib/data/sale-cars'
 import { stripHtml } from '@/lib/i18n/machine-translations'
 import { CATALOG_REVALIDATE, isWpConfigured } from './config'
 import { wpFetch } from './client'
+import { usesOf } from '@/lib/data/vehicle-categories'
 import {
   BODY_TYPES,
   choice,
@@ -219,6 +220,7 @@ function mapSaleCar(node: WireSaleCar): SaleCar | null {
     model,
     subtitle,
     bodyTypeKey: first(fields.bodyType),
+    uses: usesOf(fields.vehicleUses, first(fields.bodyType)),
     bodyType: choice(fields.bodyType, BODY_TYPES, {
       ar: 'مركبة',
       en: 'Vehicle',

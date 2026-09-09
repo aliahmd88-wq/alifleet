@@ -38,3 +38,25 @@ export function newCategoryOf(bodyTypeKey: string): NewCategory {
 export function usedCategoryOf(bodyTypeKey: string): UsedCategory {
   return USED_BY_BODY[bodyTypeKey] ?? 'cars'
 }
+
+/**
+ * What a vehicle can be used or imported for, beyond its body type. Editors
+ * tick these in ACF (`vehicle_uses`); when the field is empty the site falls
+ * back to what is typical for the body type, so a minibus reads as taxi-ready
+ * and a passenger car as open to parallel or personal import without anyone
+ * touching WordPress.
+ */
+export type VehicleUse = 'taxi' | 'parallel_import'
+export const VEHICLE_USES: VehicleUse[] = ['taxi', 'parallel_import']
+
+export function defaultUses(bodyTypeKey: string): VehicleUse[] {
+  if (bodyTypeKey === 'minivan') return ['taxi']
+  if (bodyTypeKey === 'suv' || bodyTypeKey === 'luxury_mpv') return ['taxi', 'parallel_import']
+  return []
+}
+
+export function usesOf(raw: unknown, bodyTypeKey: string): VehicleUse[] {
+  const list = Array.isArray(raw) ? raw : typeof raw === 'string' && raw ? [raw] : []
+  const picked = list.filter((v): v is VehicleUse => VEHICLE_USES.includes(v as VehicleUse))
+  return picked.length > 0 ? picked : defaultUses(bodyTypeKey)
+}

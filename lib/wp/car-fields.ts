@@ -65,6 +65,7 @@ export function commonCarFields(): string {
     mileage
     price
     featured
+    vehicleUses
     featuredImage {
       node {
         sourceUrl
@@ -120,6 +121,7 @@ export type WireCommonFields = {
   mileage?: number | string | null
   price?: number | string | null
   featured?: boolean | null
+  vehicleUses?: string | string[] | null
   featuredImage?: WireImage
   descriptionAr?: string | null
   descriptionEn?: string | null

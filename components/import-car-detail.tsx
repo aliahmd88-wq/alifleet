@@ -104,6 +104,20 @@ export function ImportCarDetail({ car, related }: { car: ImportCar; related: Imp
             <p className="mt-3 text-pretty leading-relaxed text-muted-foreground">
               {secondary}
             </p>
+            {car.uses.length > 0 && (
+              <div className="mt-5 grid gap-3">
+                {car.uses.includes('taxi') && (
+                  <p className="rounded-2xl bg-accent/10 px-4 py-3 text-sm leading-relaxed text-foreground">
+                    <strong className="font-semibold">{t.cars.badgeTaxi}.</strong> {t.cars.taxiNote}
+                  </p>
+                )}
+                {car.uses.includes('parallel_import') && (
+                  <p className="rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
+                    <strong className="font-semibold">{t.cars.badgeParallel}.</strong> {t.cars.parallelNote}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="mt-7 rounded-3xl bg-card p-6 ring-1 ring-border">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">

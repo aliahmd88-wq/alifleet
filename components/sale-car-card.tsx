@@ -61,6 +61,16 @@ export function SaleCarCard({ car }: { car: SaleCar }) {
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
           {secondary}
         </p>
+        {car.uses.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t.cars.usesLabel}>
+            {car.uses.includes('taxi') && (
+              <li className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">{t.cars.badgeTaxi}</li>
+            )}
+            {car.uses.includes('parallel_import') && (
+              <li className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold text-foreground">{t.cars.badgeParallel}</li>
+            )}
+          </ul>
+        )}
 
         <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">

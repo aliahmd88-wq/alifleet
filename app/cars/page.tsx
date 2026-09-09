@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { CarsHero } from '@/components/cars-hero'
 import { ImportSteps } from '@/components/import-steps'
 import { VehicleLineup } from '@/components/vehicle-lineup'
+import { VehicleFaq } from '@/components/vehicle-faq'
 import { ImportCustomCta } from '@/components/import-custom-cta'
 import { getVehicles } from '@/lib/wp/vehicles'
 import { getSaleCars } from '@/lib/wp/sale-cars'
@@ -51,6 +52,7 @@ export default async function CarsPage() {
           usedCars={sale.cars}
           usedStatus={sale.status}
         />
+        <VehicleFaq />
         <ImportSteps />
         <ImportCustomCta />
       </main>

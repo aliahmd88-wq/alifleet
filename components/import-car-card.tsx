@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import LocaleLink from '@/components/locale-link'
-import { ArrowUpRight, Calendar, Gauge, MapPin } from 'lucide-react'
+import { ArrowUpRight, Calendar, Gauge, } from 'lucide-react'
 import type { ImportCar } from '@/lib/data/import-cars'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { formatNumber, formatPrice } from '@/lib/format'
@@ -45,9 +45,6 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
 
       <div className="flex flex-1 flex-col p-5">
         <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          <MapPin className="size-3.5" aria-hidden="true" />
-          {car.bodyType[locale]}
-          <span aria-hidden="true">·</span>
           {car.bodyType[locale]}
         </p>
 
@@ -59,6 +56,16 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
           {secondary}
         </p>
+        {car.uses.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t.cars.usesLabel}>
+            {car.uses.includes('taxi') && (
+              <li className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">{t.cars.badgeTaxi}</li>
+            )}
+            {car.uses.includes('parallel_import') && (
+              <li className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold text-foreground">{t.cars.badgeParallel}</li>
+            )}
+          </ul>
+        )}
 
         <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">

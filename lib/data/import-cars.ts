@@ -1,3 +1,4 @@
+import type { VehicleUse } from './vehicle-categories'
 import type { Localized } from '@/lib/i18n/localized'
 
 export type CarOrigin = 'germany' | 'uae' | 'usa' | 'japan' | 'korea' | 'belgium'
@@ -11,6 +12,8 @@ export type ImportCar = {
   bodyType: Localized
   /** Raw ACF body_type key (van, pickup, truck …) — drives the lineup categories. */
   bodyTypeKey: string
+  /** Taxi licensing / parallel-import eligibility (ACF vehicle_uses, or derived). */
+  uses: VehicleUse[]
   origin: CarOrigin
   status: CarStatus
   /** 1–4, matching the four import steps — how far this unit has progressed. */
