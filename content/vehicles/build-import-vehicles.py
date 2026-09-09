@@ -162,16 +162,24 @@ def desc(v):
     }
 
 def highlights(v):
+    """Up to eight spec lines, the way a dealer's data sheet reads: power, gearbox, drive,
+    range, capacity (seats or payload), gross weight, body variant, then what the price includes."""
     fuel = FUEL[v['fuel']]; gear = GEAR[v['gear']]; h = []
-    h.append({'he': f"{v['hp']} כ\"ס, {fuel['he']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['he']}, {v['hp']} כ\"ס", 'ar': f"{v['hp']} حصاناً، {fuel['ar']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['ar']}، {v['hp']} حصاناً", 'en': f"{v['hp']} hp, {fuel['en']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['en']}, {v['hp']} hp"})
+    if v['fuel'] == 'electric':
+        h.append({'he': f"הנעה חשמלית, {v['hp']} כ\"ס", 'ar': f"دفع كهربائي، {v['hp']} حصاناً", 'en': f"Electric drive, {v['hp']} hp"})
+    else:
+        h.append({'he': f"מנוע {v['engine']} {fuel['he']}, {v['hp']} כ\"ס", 'ar': f"محرك {v['engine']} {fuel['ar']}، {v['hp']} حصاناً", 'en': f"{v['engine']} {fuel['en']} engine, {v['hp']} hp"})
     h.append({'he': gear['he'], 'ar': gear['ar'], 'en': gear['en'][0].upper() + gear['en'][1:]})
     if v['drive'] == '4x4': h.append({'he': 'הנעה כפולה 4x4', 'ar': 'دفع رباعي 4x4', 'en': '4x4 drive'})
     if v['extra'].get('range_km'): h.append({'he': f"טווח נסיעה מוערך כ-{v['extra']['range_km']} ק\"מ", 'ar': f"مدى تقديري نحو {v['extra']['range_km']} كم", 'en': f"Estimated range about {v['extra']['range_km']} km"})
-    if v['body'] == 'minivan' and v['seats']: h.append({'he': f"{v['seats']} מקומות ישיבה", 'ar': f"{v['seats']} مقعداً", 'en': f"{v['seats']} seats"})
-    elif v['payload']: h.append({'he': f"עומס מורשה כ-{v['payload']:,} ק\"ג", 'ar': f"حمولة نحو {v['payload']:,} كغ", 'en': f"About {v['payload']:,} kg payload"})
-    elif v['gvw']: h.append({'he': f"משקל כולל {v['gvw']:,} ק\"ג", 'ar': f"وزن إجمالي {v['gvw']:,} كغ", 'en': f"{v['gvw']:,} kg gross weight"})
-    h.append({'he': 'שילוח, מכס ורישוי כלולים במחיר הסופי', 'ar': 'الشحن والجمارك والترخيص ضمن السعر النهائي', 'en': 'Shipping, customs and licensing in the final price'})
-    return h[:6]
+    if v['seats']:
+        if v['body'] == 'minivan': h.append({'he': f"{v['seats']} מקומות ישיבה כולל נהג", 'ar': f"{v['seats']} مقعداً بما فيها السائق", 'en': f"{v['seats']} seats including the driver"})
+        else: h.append({'he': f"{v['seats']} מקומות ישיבה", 'ar': f"{v['seats']} مقاعد", 'en': f"{v['seats']} seats"})
+    if v['payload']: h.append({'he': f"עומס מורשה כ-{v['payload']:,} ק\"ג", 'ar': f"حمولة مسموحة نحو {v['payload']:,} كغ", 'en': f"About {v['payload']:,} kg payload"})
+    if v['gvw']: h.append({'he': f"משקל כולל מורשה {v['gvw']:,} ק\"ג", 'ar': f"وزن إجمالي مسموح {v['gvw']:,} كغ", 'en': f"{v['gvw']:,} kg gross vehicle weight"})
+    h.append({'he': f"שנת ייצור {v['year']}, חדש מהיצרן", 'ar': f"موديل {v['year']}، جديد من المصنع", 'en': f"{v['year']} model year, brand new"})
+    h.append({'he': 'שילוח, מכס ורישוי ישראלי כלולים במחיר הסופי', 'ar': 'الشحن والجمارك والترخيص الإسرائيلي ضمن السعر النهائي', 'en': 'Shipping, customs and Israeli licensing in the final price'})
+    return h[:8]
 
 def engine_label(v):
     if v['fuel'] == 'electric': return f"Electric · {v['hp']} hp"
