@@ -1,7 +1,7 @@
 'use client'
 
 import LocaleLink from '@/components/locale-link'
-import { ArrowUpRight, Ship, Store } from 'lucide-react'
+import { ArrowUpRight, Store, Truck } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { resolveCopy } from '@/lib/i18n/copy-block'
 import type { CarsPageCopy } from '@/lib/wp/cars-page'
@@ -33,19 +33,19 @@ export function CarsHero({ copy }: Props) {
     >
       <div className="mt-8 flex flex-wrap gap-3">
         <LocaleLink
-          href="#for-sale"
+          href="#new"
           className="flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
         >
-          <Store className="size-4" aria-hidden="true" />
-          {resolveCopy(copy?.ctaSale, locale, t.cars.ctaSale)}
+          <Truck className="size-4" aria-hidden="true" />
+          {resolveCopy(copy?.ctaImport, locale, t.cars.ctaImport)}
           <ArrowUpRight className="size-4" aria-hidden="true" data-flip-rtl />
         </LocaleLink>
         <LocaleLink
-          href="#import"
+          href="#used"
           className="flex items-center gap-2 rounded-full bg-card px-6 py-3 text-sm font-semibold text-foreground ring-1 ring-border transition-colors hover:bg-secondary"
         >
-          <Ship className="size-4" aria-hidden="true" />
-          {resolveCopy(copy?.ctaImport, locale, t.cars.ctaImport)}
+          <Store className="size-4" aria-hidden="true" />
+          {resolveCopy(copy?.ctaSale, locale, t.cars.ctaSale)}
         </LocaleLink>
       </div>
     </PageHero>

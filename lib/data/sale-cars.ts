@@ -21,6 +21,8 @@ export type SaleCar = {
   model: string
   subtitle: Localized
   bodyType: Localized
+  /** Raw ACF body_type key (van, pickup, truck …) — drives the lineup categories. */
+  bodyTypeKey: string
   condition: SaleCarCondition
   status: SaleCarStatus
   year: number

@@ -43,7 +43,7 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
       <div className="flex flex-1 flex-col p-5">
         <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           <MapPin className="size-3.5" aria-hidden="true" />
-          {t.import.origins[car.origin]}
+          {car.bodyType[locale]}
           <span aria-hidden="true">·</span>
           {car.bodyType[locale]}
         </p>

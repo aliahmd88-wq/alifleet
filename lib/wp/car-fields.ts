@@ -149,7 +149,7 @@ export const BODY_TYPES: Record<string, Localized> = {
   pickup: { ar: 'بيك أب', en: 'Pickup', he: 'טנדר' },
   luxury_mpv: { ar: 'MPV فاخر', en: 'Luxury MPV', he: 'MPV יוקרתי' },
   truck: { ar: 'شاحنة', en: 'Truck', he: 'משאית' },
-  minivan: { ar: 'ميني فان', en: 'Minivan', he: 'מיניוואן' },
+  minivan: { ar: 'ميني باص', en: 'Minibus', he: 'מיניבוס' },
 }
 
 export const TRANSMISSIONS: Record<string, Localized> = {

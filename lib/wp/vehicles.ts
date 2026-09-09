@@ -11,20 +11,21 @@ import { CATALOG_REVALIDATE, isWpConfigured } from './config'
 import { wpFetch } from './client'
 import {
   BODY_TYPES,
-  PLACEHOLDER_IMAGE,
-  type WireCommonFields,
-  type WireImage,
   choice,
   commonCarFields,
   enumValue,
+  first,
   gallery,
   highlights,
   int,
   localized,
   nullableNumber,
+  PLACEHOLDER_IMAGE,
   plain,
   specs,
   text,
+  type WireCommonFields,
+  type WireImage,
 } from './car-fields'
 
 /**
@@ -227,6 +228,7 @@ function mapCar(node: WireCar): ImportCar | null {
     slug,
     model,
     subtitle,
+    bodyTypeKey: first(fields.bodyType),
     bodyType: choice(fields.bodyType, BODY_TYPES, {
       ar: 'مركبة',
       en: 'Vehicle',

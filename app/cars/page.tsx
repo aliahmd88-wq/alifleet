@@ -5,9 +5,8 @@ import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CarsHero } from '@/components/cars-hero'
-import { SaleBrowser } from '@/components/sale-browser'
 import { ImportSteps } from '@/components/import-steps'
-import { ImportBrowser } from '@/components/import-browser'
+import { VehicleLineup } from '@/components/vehicle-lineup'
 import { ImportCustomCta } from '@/components/import-custom-cta'
 import { getVehicles } from '@/lib/wp/vehicles'
 import { getSaleCars } from '@/lib/wp/sale-cars'
@@ -25,12 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * One page, two businesses.
- *
- * "For sale" comes first because it is the shorter path to a purchase — those
- * cars exist today and can be handed over this week. Import follows, with its
- * four-step explainer, because it is a commissioned service that needs to
- * explain itself before its listings mean anything.
+ * One page, one lineup: new vehicles to order and used vehicles from the lot
+ * share a grid with a new/used switch and a category row (see VehicleLineup).
+ * The ordering steps and the "another vehicle" prompt follow the grid.
  *
  * Both inventories are fetched in parallel with the page's editable copy: they
  * hit different post types and none blocks the others, so a slow or broken
@@ -49,13 +45,13 @@ export default async function CarsPage() {
       <SiteHeader />
       <main>
         <CarsHero copy={copy.hero} />
-        <SaleBrowser cars={sale.cars} status={sale.status} copy={copy.saleHeader} />
-        <ImportSteps />
-        <ImportBrowser
-          cars={imports.cars}
-          status={imports.status}
-          copy={copy.importHeader}
+        <VehicleLineup
+          newCars={imports.cars}
+          newStatus={imports.status}
+          usedCars={sale.cars}
+          usedStatus={sale.status}
         />
+        <ImportSteps />
         <ImportCustomCta />
       </main>
       <SiteFooter />

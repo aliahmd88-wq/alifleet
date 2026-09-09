@@ -9,6 +9,8 @@ export type ImportCar = {
   model: string
   subtitle: Localized
   bodyType: Localized
+  /** Raw ACF body_type key (van, pickup, truck …) — drives the lineup categories. */
+  bodyTypeKey: string
   origin: CarOrigin
   status: CarStatus
   /** 1–4, matching the four import steps — how far this unit has progressed. */
