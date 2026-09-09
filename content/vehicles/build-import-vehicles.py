@@ -217,6 +217,7 @@ for v in V:
         'slug': v['slug'], 'title': v['title_he'], 'car_model': v['model'], 'body_type': v['body'], 'origin': v['origin'], 'status': 'available', 'stage': 1,
         'year': v['year'], 'mileage': 0, 'price': '', 'featured': 0, 'featured_image': v['img'],
         'subtitle': {'he': v['title_he'], 'ar': NAME_AR[v['slug']], 'en': NAME_EN[v['slug']]}, 'description': desc(v), 'highlights': highlights(v),
+        'uses': (['taxi'] if v['body'] == 'minivan' else []),
         'specs': {'engine': engine_label(v), 'transmission': v['gear'], 'fuel': v['fuel'], 'drivetrain': v['drive'] or ('4x2' if v['body'] in ('pickup', 'truck') else ''), 'seats': v['seats'] or ''},
         'eta': ETA,
     })

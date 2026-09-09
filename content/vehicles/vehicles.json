@@ -55,6 +55,9 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [
+    "taxi"
+   ],
    "specs": {
     "engine": "2.0L diesel · 190 hp",
     "transmission": "auto",
@@ -122,6 +125,9 @@
      "ar": "الشحن والجمارك والترخيص الإسرائيلي ضمن السعر النهائي",
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
+   ],
+   "uses": [
+    "taxi"
    ],
    "specs": {
     "engine": "2.0L diesel · 170 hp",
@@ -196,6 +202,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 190 hp",
     "transmission": "auto",
@@ -269,6 +276,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 170 hp",
     "transmission": "auto",
@@ -342,6 +350,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 190 hp",
     "transmission": "auto",
@@ -415,6 +424,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 150 hp",
     "transmission": "auto",
@@ -488,6 +498,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 190 hp",
     "transmission": "auto",
@@ -561,6 +572,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 190 hp",
     "transmission": "auto",
@@ -634,6 +646,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 136 hp",
     "transmission": "auto",
@@ -707,6 +720,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 163 hp",
     "transmission": "auto",
@@ -780,6 +794,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 177 hp",
     "transmission": "auto",
@@ -853,6 +868,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 177 hp",
     "transmission": "auto",
@@ -926,6 +942,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 163 hp",
     "transmission": "auto",
@@ -999,6 +1016,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.2L diesel · 140 hp",
     "transmission": "auto",
@@ -1067,6 +1085,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.2L diesel · 140 hp",
     "transmission": "manual",
@@ -1140,6 +1159,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 177 hp",
     "transmission": "auto",
@@ -1213,6 +1233,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 177 hp",
     "transmission": "auto",
@@ -1286,6 +1307,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "1.5L diesel · 130 hp",
     "transmission": "auto",
@@ -1354,6 +1376,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "1.5L diesel · 130 hp",
     "transmission": "auto",
@@ -1427,6 +1450,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 177 hp",
     "transmission": "auto",
@@ -1500,6 +1524,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 170 hp",
     "transmission": "auto",
@@ -1573,6 +1598,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "2.0L diesel · 150 hp",
     "transmission": "auto",
@@ -1646,6 +1672,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "3.0L diesel · 180 hp",
     "transmission": "auto",
@@ -1714,6 +1741,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "5.2L diesel · 190 hp",
     "transmission": "auto",
@@ -1792,6 +1820,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "1.9L diesel · 163 hp",
     "transmission": "auto",
@@ -1865,6 +1894,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "Electric · 510 hp",
     "transmission": "auto",
@@ -1943,6 +1973,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "6.7L Cummins diesel · 370 hp",
     "transmission": "auto",
@@ -2021,6 +2052,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "6.7L Power Stroke diesel · 475 hp",
     "transmission": "auto",
@@ -2094,6 +2126,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "Electric · 204 hp",
     "transmission": "auto",
@@ -2167,6 +2200,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "Electric · 120 hp",
     "transmission": "auto",
@@ -2240,6 +2274,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "Electric · 120 hp",
     "transmission": "auto",
@@ -2313,6 +2348,7 @@
      "en": "Shipping, customs and Israeli licensing in the final price"
     }
    ],
+   "uses": [],
    "specs": {
     "engine": "Electric · 228 hp",
     "transmission": "auto",
