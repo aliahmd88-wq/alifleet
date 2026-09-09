@@ -110,9 +110,10 @@ add('isuzu-d-max-4x4-ls-premium', 'Isuzu D-Max 4x4 LS Premium', 'איסוזו ד
     note={'he': 'טון עומס ורמת אבזור פרימיום, לעבודה בשטח וגם לנסיעות משפחה.', 'ar': 'طن حمولة وتجهيزات بريميوم، للعمل في الميدان ولرحلات العائلة أيضاً.', 'en': 'A tonne of payload and premium equipment, for site work and family trips alike.'})
 
 # ------------------------------------------------------------------- American pickups
-add('chevrolet-silverado-ev-wt', 'Chevrolet Silverado EV WT', 'שברולט סילברדו EV WT', 'pickup', 'pickup', 'usa', 2026, 'electric', 'auto', 'Electric', 515, seats=5, drive='4x4',
-    sub={'he': 'טנדר חשמלי 515 כ"ס לעבודה כבדה', 'ar': 'بيك أب كهربائي 515 حصاناً للعمل الشاق', 'en': 'Electric work truck with 515 hp'},
-    note={'he': 'הנעה כפולה ומומנט מיידי, עם עלות אנרגיה נמוכה לצי שמחשב כל שקל.', 'ar': 'دفع رباعي وعزم فوري، مع تكلفة طاقة منخفضة للأساطيل التي تحسب كل شيكل.', 'en': 'Dual-motor drive and instant torque, with low energy costs for fleets that count every shekel.'})
+add('chevrolet-silverado-ev-wt', 'Chevrolet Silverado EV Work Truck · Max Range', 'שברולט סילברדו EV Work Truck מקס ריינג\' 2026', 'pickup', 'pickup', 'usa', 2026, 'electric', 'auto', 'Electric', 510, seats=5, drive='4x4',
+    sub={'he': 'טנדר עבודה חשמלי עם סוללת Max Range לטווח של כ-790 ק"מ', 'ar': 'بيك أب عمل كهربائي ببطارية Max Range لمدى نحو 790 كم', 'en': 'Electric work truck with the Max Range battery, about 790 km of range'},
+    note={'he': 'גרסת ה-Work Truck עם הסוללה הגדולה: הנעה כפולה, 510 כ"ס, טווח מוערך של כ-790 ק"מ לפי היצרן, ושקעי חשמל בארגז להפעלת כלי עבודה באתר.', 'ar': 'إصدار Work Truck بالبطارية الكبيرة: دفع رباعي، 510 حصان، مدى تقديري نحو 790 كم حسب الشركة المصنعة، ومقابس كهرباء في الصندوق لتشغيل معدات العمل في الموقع.', 'en': 'The Work Truck version with the big battery: dual-motor drive, 510 hp, a manufacturer-estimated range of about 790 km, and power outlets in the bed to run tools on site.'},
+    extra={'range_km': 790})
 add('ram-2500-heavy-duty', 'RAM 2500 Heavy Duty', 'ראם 2500 הבי דיוטי', 'pickup', 'pickup', 'usa', 2026, 'diesel', 'auto', '6.7L Cummins', 370, seats=5, gvw=4535, payload=1134, drive='4x4',
     sub={'he': 'טנדר כבד עם דיזל קאמינס 6.7 ליטר', 'ar': 'بيك أب ثقيل بمحرك ديزل كامينز 6.7 لتر', 'en': 'Heavy-duty pickup with the 6.7-litre Cummins diesel'},
     note={'he': 'מנוע הדיזל המפורסם של ראם לגרירה כבדה, מיובא ישירות מארה"ב.', 'ar': 'محرك الديزل الشهير من رام للقطر الثقيل، مستورد مباشرة من أمريكا.', 'en': 'RAM\'s famous diesel for heavy towing, imported directly from the USA.'})
@@ -165,6 +166,7 @@ def highlights(v):
     h.append({'he': f"{v['hp']} כ\"ס, {fuel['he']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['he']}, {v['hp']} כ\"ס", 'ar': f"{v['hp']} حصاناً، {fuel['ar']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['ar']}، {v['hp']} حصاناً", 'en': f"{v['hp']} hp, {fuel['en']}" if v['fuel'] == 'electric' else f"{v['engine']} {fuel['en']}, {v['hp']} hp"})
     h.append({'he': gear['he'], 'ar': gear['ar'], 'en': gear['en'][0].upper() + gear['en'][1:]})
     if v['drive'] == '4x4': h.append({'he': 'הנעה כפולה 4x4', 'ar': 'دفع رباعي 4x4', 'en': '4x4 drive'})
+    if v['extra'].get('range_km'): h.append({'he': f"טווח נסיעה מוערך כ-{v['extra']['range_km']} ק\"מ", 'ar': f"مدى تقديري نحو {v['extra']['range_km']} كم", 'en': f"Estimated range about {v['extra']['range_km']} km"})
     if v['body'] == 'minivan' and v['seats']: h.append({'he': f"{v['seats']} מקומות ישיבה", 'ar': f"{v['seats']} مقعداً", 'en': f"{v['seats']} seats"})
     elif v['payload']: h.append({'he': f"עומס מורשה כ-{v['payload']:,} ק\"ג", 'ar': f"حمولة نحو {v['payload']:,} كغ", 'en': f"About {v['payload']:,} kg payload"})
     elif v['gvw']: h.append({'he': f"משקל כולל {v['gvw']:,} ק\"ג", 'ar': f"وزن إجمالي {v['gvw']:,} كغ", 'en': f"{v['gvw']:,} kg gross weight"})
