@@ -19,7 +19,7 @@ export const ar: Dictionary = {
     viewDetails: 'عرض التفاصيل',
     inStock: 'متوفر',
     outOfStock: 'غير متوفر',
-    onRequest: 'حسب الطلب',
+    onRequest: 'لطلب عرض سعر',
     quantity: 'الكمية',
     remove: 'إزالة',
     all: 'الكل',

@@ -73,9 +73,9 @@ export function ImportCarCard({ car }: { car: ImportCar }) {
         <div className="mt-auto flex items-end justify-between gap-3 pt-5">
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              {t.common.from}
+              {car.price === null ? t.import.landedPrice : t.common.from}
             </p>
-            <p className="font-serif text-2xl text-foreground" dir="ltr">
+            <p className="font-serif text-2xl text-foreground" dir={car.price === null ? undefined : 'ltr'}>
               {car.price === null
                 ? t.common.onRequest
                 : formatPrice(car.price, store.currency)}

@@ -19,7 +19,7 @@ export const he: Dictionary = {
     viewDetails: 'לפרטים',
     inStock: 'במלאי',
     outOfStock: 'אזל מהמלאי',
-    onRequest: 'לפי בקשה',
+    onRequest: 'לקבלת הצעת מחיר',
     quantity: 'כמות',
     remove: 'הסרה',
     all: 'הכל',

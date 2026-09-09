@@ -17,7 +17,7 @@ export const en = {
     viewDetails: 'View details',
     inStock: 'In stock',
     outOfStock: 'Out of stock',
-    onRequest: 'On request',
+    onRequest: 'Request a quote',
     quantity: 'Quantity',
     remove: 'Remove',
     all: 'All',
