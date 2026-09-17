@@ -19,10 +19,11 @@
  *   define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', '<a long random string>' );
  */
 
-const LIVE_ENDPOINT = 'https://a-f.site/graphql'
+// The old store backend (a-f.site) now belongs to Lion Car. ALI FLEET only
+// talks to WordPress when WORDPRESS_GRAPHQL_ENDPOINT points at its own, new
+// install; with the variable unset every page renders its built-in content.
 const ENV_ENDPOINT = (process.env.WORDPRESS_GRAPHQL_ENDPOINT ?? '').trim()
-const RAW_ENDPOINT =
-  ENV_ENDPOINT && !ENV_ENDPOINT.includes('sslip.io') ? ENV_ENDPOINT : LIVE_ENDPOINT
+const RAW_ENDPOINT = ENV_ENDPOINT && !ENV_ENDPOINT.includes('sslip.io') ? ENV_ENDPOINT : ''
 
 /** The configured GraphQL endpoint, or an empty string when unset. */
 export const wpEndpoint = RAW_ENDPOINT

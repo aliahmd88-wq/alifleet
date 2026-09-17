@@ -55,7 +55,40 @@ function localeRedirect(
   )
 }
 
+/**
+ * The store moved to Lion Car. Every catalogue, vehicle, basket, checkout,
+ * account and article URL — in any of its Hebrew, Arabic, English or legacy
+ * spellings — is answered with a permanent redirect to the same page on
+ * lioncar.co.il, so old links, bookmarks and search results keep working.
+ */
+const LION_CAR_ORIGIN = 'https://lioncar.co.il'
+const MOVED_ROOTS = new Set(['products', 'cars', 'cart', 'checkout', 'account', 'my-account', 'blog', 'cms', 'wc-ajax'])
+
+function movedToLionCar(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl
+  const requestedLocale = searchParams.get('locale')
+  const publicRoute = resolvePublicPathname(pathname, requestedLocale)
+  const prefixedPrivate = publicRoute ? null : localePrefixedPrivatePathname(pathname)
+  const cookieLocale = request.cookies.get(LOCALE_STORAGE_KEY)?.value
+  const locale: Locale =
+    publicRoute?.locale ??
+    prefixedPrivate?.locale ??
+    (isLocale(requestedLocale) ? requestedLocale : isLocale(cookieLocale) ? cookieLocale : defaultLocale)
+  const internal = publicRoute?.internalPathname ?? prefixedPrivate?.pathname ?? pathname
+  const root = internal.split('/').filter(Boolean)[0] ?? ''
+  if (!MOVED_ROOTS.has(root)) return null
+
+  const target = new URL(`/${locale}${internal.replace(/\/+$/, '')}`, LION_CAR_ORIGIN)
+  searchParams.forEach((value, key) => {
+    if (key !== 'locale') target.searchParams.append(key, value)
+  })
+  return NextResponse.redirect(target, { status: 301 })
+}
+
 export function proxy(request: NextRequest) {
+  const moved = movedToLionCar(request)
+  if (moved) return moved
+
   const { pathname, searchParams } = request.nextUrl
   const requestedLocale = searchParams.get('locale')
   const publicRoute = resolvePublicPathname(pathname, requestedLocale)
