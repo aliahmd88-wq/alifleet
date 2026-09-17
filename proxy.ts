@@ -85,7 +85,16 @@ function movedToLionCar(request: NextRequest): NextResponse | null {
   return NextResponse.redirect(target, { status: 301 })
 }
 
+/** The owner's habit: typing /wp-admin on alifleet.com opens its own WordPress (cms.alifleet.com). */
+const WP_ADMIN_ORIGIN = process.env.WORDPRESS_STORE_URL?.replace(/\/+$/, '') || 'https://cms.alifleet.com'
+
 export function proxy(request: NextRequest) {
+  const adminPath = request.nextUrl.pathname
+  if (/^\/(?:[a-z]{2}\/)?(?:wp-admin|wp-login\.php)(?:\/|$)/.test(adminPath)) {
+    const target = adminPath.replace(/^\/[a-z]{2}(?=\/)/, '')
+    return NextResponse.redirect(`${WP_ADMIN_ORIGIN}${target}${request.nextUrl.search}`, 307)
+  }
+
   const moved = movedToLionCar(request)
   if (moved) return moved
 
