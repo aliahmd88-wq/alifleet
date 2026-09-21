@@ -4,10 +4,10 @@ import { useMemo, useState } from 'react'
 import { carOrigins, carStatuses } from '@/lib/data/import-cars'
 import { Paginator } from '@/components/paginator'
 import type { CarOrigin, CarStatus, ImportCar } from '@/lib/data/import-cars'
-import type { VehiclesStatus } from '@/lib/wp/vehicles'
+import type { VehiclesStatus } from '@/lib/content/vehicles'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { resolveCopy } from '@/lib/i18n/copy-block'
-import type { CarsPageCopy } from '@/lib/wp/cars-page'
+import type { CarsPageCopy } from '@/lib/content/types'
 import { ImportCarCard } from '@/components/import-car-card'
 import LocaleLink from '@/components/locale-link'
 
@@ -23,7 +23,7 @@ export function ImportBrowser({ cars, status, copy }: Props) {
   const [origin, setOrigin] = useState<CarOrigin | 'all'>('all')
   const [carStatus, setCarStatus] = useState<CarStatus | 'all'>('all')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 24 // 8 rows × 3 cols: the whole import range on one or two pages
+  const PAGE_SIZE = 6 // 2 rows × 3 cols
 
   const filtered = useMemo(
     () =>
@@ -45,43 +45,7 @@ export function ImportBrowser({ cars, status, copy }: Props) {
       ? 'rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background'
       : 'rounded-full bg-card px-4 py-2 text-sm font-medium text-muted-foreground ring-1 ring-border transition-colors hover:bg-secondary hover:text-foreground'
 
-  /* ---------- empty / error states served from server data ---------- */
-  if (status === 'not_configured' || status === 'unreachable') {
-    return (
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
-        <div className="rounded-3xl bg-card p-12 text-center ring-1 ring-border">
-          <p className="font-semibold text-foreground">
-            {t.import.inventoryUnavailable}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t.import.inventoryUnavailableLead}
-          </p>
-          <LocaleLink
-            href="/contact"
-            className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-          >
-            {t.common.callUs}
-          </LocaleLink>
-        </div>
-      </section>
-    )
-  }
-
-  if (status === 'acf_missing') {
-    return (
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
-        <div className="rounded-3xl border border-destructive/30 bg-destructive/5 p-12 text-center">
-          <p className="font-semibold text-foreground">
-            {t.import.inventoryAcfMissing}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t.import.inventoryAcfMissingLead}
-          </p>
-        </div>
-      </section>
-    )
-  }
-
+  /* ---------- empty state served from server data ---------- */
   if (status === 'empty') {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">

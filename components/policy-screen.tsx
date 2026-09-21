@@ -5,7 +5,7 @@ import LocaleLink from '@/components/locale-link'
 import { ShieldCheck, FileText, RefreshCcw, ArrowLeft, ArrowRight, Calendar, Printer } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { isLocale, localeMeta, type Locale } from '@/lib/i18n/config'
-import type { MultilingualPolicy, PolicyPageData } from '@/lib/wp/policies'
+import type { MultilingualPolicy, PolicyPageData } from '@/lib/content/types'
 
 type PolicyType = 'privacy' | 'terms' | 'return'
 
@@ -301,7 +301,7 @@ export function PolicyScreen({
                 [&_li]:leading-relaxed [&_li_strong]:text-foreground
                 [&_strong]:text-foreground [&_strong]:font-semibold
                 [&_a]:text-accent [&_a]:underline [&_a]:hover:text-accent/80"
-              // WordPress content is sanitized at the server-side data boundary.
+              // Policy content is sanitized at the server-side data boundary.
               dangerouslySetInnerHTML={{ __html: activeDoc.content }}
             />
           ) : (

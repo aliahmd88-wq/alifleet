@@ -4,18 +4,27 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { useLanguage } from '@/lib/i18n/language-context'
+import { useSiteContent } from '@/lib/admin/site-content-context'
 
 export function MarqueeStrip() {
   const wrapRef = useRef<HTMLDivElement>(null)
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
 
-  const items = [
+  const defaultItems = [
     t.home.fleet.truckTitle,
     t.footer.servicesLinks.import,
-    t.products.trustFitment,
+    t.products.trustGenuine,
     t.home.fleet.luxuryTitle,
     t.footer.servicesLinks.parts,
   ]
+
+  const items =
+    content.pages?.home?.marquee && content.pages.home.marquee.length > 0
+      ? content.pages.home.marquee
+          .map((m) => tStr(m, locale))
+          .filter(Boolean)
+      : defaultItems
 
   useGSAP(
     () => {

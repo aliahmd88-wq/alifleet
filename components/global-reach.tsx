@@ -8,6 +8,7 @@ import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Globe2, ShieldCheck, Truck, Plane, Ship } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
+import { useSiteContent } from '@/lib/admin/site-content-context'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -42,7 +43,13 @@ export function GlobalReach() {
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
+
+  const g = content.pages?.home?.globalReach
+  const reachTitle = tStr(g?.title, locale) || t.import.title
+  const reachSubtitle = tStr(g?.subtitle, locale) || t.import.titleEm
+  const reachLead = tStr(g?.description, locale) || t.import.lead
 
   const IMPORT_FEATURES = [
     {
@@ -367,11 +374,11 @@ export function GlobalReach() {
                 data-globe-copy
                 className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-5xl"
               >
-                {t.import.title}{' '}
-                <em className="font-serif italic text-accent">{t.import.titleEm}</em>
+                {reachTitle}{' '}
+                <em className="font-serif italic text-accent">{reachSubtitle}</em>
               </h2>
               <p data-globe-copy className="max-w-md text-pretty leading-relaxed text-muted-foreground">
-                {t.import.lead}
+                {reachLead}
               </p>
             </div>
 

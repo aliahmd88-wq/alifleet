@@ -1,22 +1,24 @@
 import type { Metadata } from 'next'
-import { getDictionary } from '@/lib/i18n/dictionaries'
-import { pageAlternates } from '@/lib/seo/alternates'
-import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { BlogHero } from '@/components/blog-hero'
 import { BlogBrowser } from '@/components/blog-browser'
-import { getPosts } from '@/lib/wp/posts'
+import { getPosts } from '@/lib/content/posts'
+import { getPublicMetadata } from '@/lib/content/metadata'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
-/** Title and description follow the visitor's language (see t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  return {
-    title: t.seo.blogTitle,
-    description: t.seo.blogDescription,
-    alternates: pageAlternates('/blog/', locale),
-  }
+  return getPublicMetadata({
+    entityType: 'page',
+    entityId: 'blog',
+    locale: await getRequestLocale(),
+    fallback: {
+      title: 'Blog — ALI FLEET',
+      description: 'Industry news, import tips, fleet management guides and stories from ALI FLEET.',
+      path: '/blog',
+      image: '/images/blog-hero.png',
+    },
+  })
 }
 
 export default async function BlogPage() {

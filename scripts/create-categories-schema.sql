@@ -1,0 +1,8 @@
+-- DEPRECATED: this manual schema path is superseded by the tracked migration.
+--
+-- The canonical categories schema, RLS policies, grants, indexes, the
+-- product-link validation trigger, and the 19-category seed now live in:
+--   supabase/migrations/20260911044553_repair_product_taxonomy.sql
+--
+-- Do not run this file. Apply migrations through the Supabase migration
+-- workflow instead so schema_migrations history stays consistent.

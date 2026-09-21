@@ -1,20 +1,14 @@
 import { notFound } from 'next/navigation'
-import { getDictionary } from '@/lib/i18n/dictionaries'
-import { pageAlternates } from '@/lib/seo/alternates'
-import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProductDetail } from '@/components/product-detail'
 import { absoluteUrl } from '@/lib/seo'
 import { serializeJsonLd } from '@/lib/json-ld'
-import { getPart, getRelatedParts } from '@/lib/wp/catalog'
+import { getPart, getRelatedParts } from '@/lib/content/catalog'
+import { getPublicMetadata } from '@/lib/content/metadata'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
-/**
- * Product pages are rendered on demand rather than pre-generated: the catalog
- * lives in WooCommerce, so a new product must appear without a redeploy. There
- * is no `generateStaticParams` for that reason — the cached catalog fetch is
- * what keeps this cheap.
- */
+/** Product detail pages resolve directly from the local content catalog. */
 
 export async function generateMetadata({
   params,
@@ -25,26 +19,21 @@ export async function generateMetadata({
   const part = await getPart(slug)
   if (!part) return { title: 'ALI FLEET' }
 
-  // The visitor's language first; Hebrew (the original) is the fallback for
-  // anything not translated yet, which still beats a bare site name.
   const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  const title = part.name[locale] || part.name.he
-  const description = part.description[locale] || part.description.he || undefined
-  const pageTitle = `${title} — ${t.seo.productSuffix}`
+  const title = part.name[locale] || part.name.en || part.name.he
+  const description = part.description[locale] || part.description.en || part.description.he
 
-  return {
-    title: pageTitle,
-    description,
-    alternates: pageAlternates(`/products/${slug}/`, locale),
-    openGraph: {
-      type: 'website',
-      title: pageTitle,
+  return getPublicMetadata({
+    entityType: 'product',
+    entityId: slug,
+    locale,
+    fallback: {
+      title: `${title} — ALI FLEET Spare Parts`,
       description,
-      url: absoluteUrl(`/products/${slug}/`),
-      images: part.image ? [{ url: part.image, alt: title }] : undefined,
+      path: `/products/${slug}`,
+      image: part.image,
     },
-  }
+  })
 }
 
 export default async function ProductPage({

@@ -2,23 +2,26 @@ import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PolicyScreen } from '@/components/policy-screen'
-import { getTermsPolicy } from '@/lib/wp/policies'
+import { getTermsPolicy, getPolicyByLocale } from '@/lib/content/policies'
 import { isLocale } from '@/lib/i18n/config'
-import { getDictionary } from '@/lib/i18n/dictionaries'
 import { getRequestLocale } from '@/lib/i18n/request-locale'
-import { pageAlternates } from '@/lib/seo/alternates'
+import { getPublicMetadata } from '@/lib/content/metadata'
 
 export const revalidate = 600
 
-/** Title, description, canonical and hreflang follow the visitor's language. */
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  return {
-    title: t.seo.termsTitle,
-    description: t.seo.termsDescription,
-    alternates: pageAlternates('/terms/', locale),
-  }
+  const policy = await getPolicyByLocale('terms', locale)
+  return getPublicMetadata({
+    entityType: 'policy',
+    entityId: 'terms',
+    locale,
+    fallback: {
+      title: policy?.title || 'Terms & Conditions | ALI FLEET',
+      description: 'Official service terms for ALI FLEET customers, purchases, and vehicle imports.',
+      path: '/terms',
+    },
+  })
 }
 
 type PageProps = {
@@ -31,7 +34,7 @@ export default async function TermsPage({ searchParams }: PageProps) {
   const requestedLocale = typeof rawLocale === 'string' ? rawLocale.trim().toLowerCase() : undefined
   const activeLocale = isLocale(requestedLocale) ? requestedLocale : undefined
 
-  const policy = await getTermsPolicy(activeLocale)
+  const policy = await getTermsPolicy()
 
   return (
     <>

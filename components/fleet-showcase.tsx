@@ -7,37 +7,56 @@ import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowUpRight } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
-import type { PageImages } from '@/lib/wp/page-images'
+import { useSiteContent } from '@/lib/admin/site-content-context'
+import type { PageImages } from '@/lib/content/types'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export function FleetShowcase({ wpImages }: { wpImages?: PageImages }) {
+export function FleetShowcase({ initialImages }: { initialImages?: PageImages }) {
   const sectionRef = useRef<HTMLElement>(null)
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
+  const fleetSection = content?.pages?.home?.fleet
 
-  const vehicles = [
+  const defaultVehicles = [
     {
       title: t.home.fleet.truckTitle,
       tag: t.home.fleet.truckTag,
       description: t.home.fleet.truckDesc,
-      image: wpImages?.fleetVehicle1 || '/images/fleet-truck.png',
+      image: initialImages?.fleetVehicle1 || '/images/fleet-truck.png',
       alt: t.home.fleet.truckTitle,
     },
     {
       title: t.home.fleet.vanTitle,
       tag: t.home.fleet.vanTag,
       description: t.home.fleet.vanDesc,
-      image: wpImages?.fleetVehicle2 || '/images/fleet-van.png',
+      image: initialImages?.fleetVehicle2 || '/images/fleet-van.png',
       alt: t.home.fleet.vanTitle,
     },
     {
       title: t.home.fleet.luxuryTitle,
       tag: t.home.fleet.luxuryTag,
       description: t.home.fleet.luxuryDesc,
-      image: wpImages?.fleetVehicle3 || '/images/fleet-suv.png',
+      image: initialImages?.fleetVehicle3 || '/images/fleet-suv.png',
       alt: t.home.fleet.luxuryTitle,
     },
   ]
+
+  const vehicles = fleetSection?.vehicles?.length
+    ? fleetSection.vehicles.map((v, i) => ({
+        title: tStr(v.title, locale) || defaultVehicles[i]?.title || 'Vehicle',
+        tag: tStr(v.tag, locale) || defaultVehicles[i]?.tag || '',
+        description: tStr(v.description, locale) || defaultVehicles[i]?.description || '',
+        image: v.image || defaultVehicles[i]?.image || '/images/fleet-truck.png',
+        alt: tStr(v.title, locale) || defaultVehicles[i]?.title || 'Vehicle',
+      }))
+    : defaultVehicles
+
+  const eyebrow = tStr(fleetSection?.eyebrow, locale) || t.home.fleet.eyebrow
+  const titleStart = tStr(fleetSection?.titleStart, locale) || t.home.fleet.titleStart
+  const titleEm = tStr(fleetSection?.titleEm, locale) || t.home.fleet.titleEm
+  const titleEnd = tStr(fleetSection?.titleEnd, locale) || t.home.fleet.titleEnd
+  const lead = tStr(fleetSection?.lead, locale) || t.home.fleet.lead
 
   useGSAP(
     () => {
@@ -76,16 +95,16 @@ export function FleetShowcase({ wpImages }: { wpImages?: PageImages }) {
         <div data-fleet-heading className="mb-12 flex flex-col justify-between gap-6 md:mb-16 md:flex-row md:items-end">
           <div className="max-w-xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-              {t.home.fleet.eyebrow}
+              {eyebrow}
             </p>
             <h2 className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
-              {t.home.fleet.titleStart}{' '}
-              <em className="font-serif italic text-accent">{t.home.fleet.titleEm}</em>{' '}
-              {t.home.fleet.titleEnd}
+              {titleStart}{' '}
+              <em className="font-serif italic text-accent">{titleEm}</em>{' '}
+              {titleEnd}
             </h2>
           </div>
           <p className="max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
-            {t.home.fleet.lead}
+            {lead}
           </p>
         </div>
 

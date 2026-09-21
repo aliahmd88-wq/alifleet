@@ -2,23 +2,26 @@ import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PolicyScreen } from '@/components/policy-screen'
-import { getPrivacyPolicy } from '@/lib/wp/policies'
+import { getPrivacyPolicy, getPolicyByLocale } from '@/lib/content/policies'
 import { isLocale } from '@/lib/i18n/config'
-import { getDictionary } from '@/lib/i18n/dictionaries'
 import { getRequestLocale } from '@/lib/i18n/request-locale'
-import { pageAlternates } from '@/lib/seo/alternates'
+import { getPublicMetadata } from '@/lib/content/metadata'
 
 export const revalidate = 600
 
-/** Title, description, canonical and hreflang follow the visitor's language. */
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  return {
-    title: t.seo.privacyTitle,
-    description: t.seo.privacyDescription,
-    alternates: pageAlternates('/privacy-policy/', locale),
-  }
+  const policy = await getPolicyByLocale('privacy', locale)
+  return getPublicMetadata({
+    entityType: 'policy',
+    entityId: 'privacy',
+    locale,
+    fallback: {
+      title: policy?.title || 'Privacy Policy | ALI FLEET',
+      description: 'Official privacy and data protection terms for ALI FLEET customers and visitors.',
+      path: '/privacy-policy',
+    },
+  })
 }
 
 type PageProps = {
@@ -31,7 +34,7 @@ export default async function PrivacyPolicyPage({ searchParams }: PageProps) {
   const requestedLocale = typeof rawLocale === 'string' ? rawLocale.trim().toLowerCase() : undefined
   const activeLocale = isLocale(requestedLocale) ? requestedLocale : undefined
 
-  const policy = await getPrivacyPolicy(activeLocale)
+  const policy = await getPrivacyPolicy()
 
   return (
     <>

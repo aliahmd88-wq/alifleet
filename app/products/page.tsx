@@ -1,33 +1,29 @@
 import type { Metadata } from 'next'
-import { getDictionary } from '@/lib/i18n/dictionaries'
-import { pageAlternates } from '@/lib/seo/alternates'
-import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProductsScreen } from '@/components/products-screen'
-import { getCatalogSummaries } from '@/lib/wp/catalog'
+import { getCatalogSummaries } from '@/lib/content/catalog'
+import { getPublicMetadata } from '@/lib/content/metadata'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
-/** Title and description follow the visitor's language (see t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  const alternates = pageAlternates('/products/', locale)
-  return {
-    title: t.seo.productsTitle,
-    description: t.seo.productsDescription,
-    alternates,
-    openGraph: { type: 'website', title: t.seo.productsTitle, description: t.seo.productsDescription, url: alternates.canonical },
-  }
+  return getPublicMetadata({
+    entityType: 'page',
+    entityId: 'products',
+    locale: await getRequestLocale(),
+    fallback: {
+      title: 'Spare Parts — Genuine Truck & Commercial Vehicle Parts',
+      description: 'Genuine and OEM spare parts for commercial vehicles, dispatched from Israel.',
+      path: '/products',
+      image: '/images/spare-parts.png',
+    },
+  })
 }
 
-/**
- * The catalog is read on the server so the products are in the initial HTML —
- * good for SEO and it keeps the WooCommerce endpoint out of the browser. The
- * fetch is cached, so 165 products do not mean 165 round trips per visitor.
- */
+/** The local catalog renders on the server for complete initial HTML and SEO. */
 export default async function ProductsPage() {
-  const { parts, status, hasUntranslated } = await getCatalogSummaries()
+  const { parts, categories, status, hasUntranslated } = await getCatalogSummaries()
 
   return (
     <>
@@ -35,6 +31,7 @@ export default async function ProductsPage() {
       <main>
         <ProductsScreen
           parts={parts}
+          categories={categories}
           status={status}
           hasUntranslated={hasUntranslated}
         />

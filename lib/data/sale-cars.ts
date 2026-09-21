@@ -1,9 +1,8 @@
-import type { VehicleUse } from './vehicle-categories'
 import type { Localized } from '@/lib/i18n/localized'
 
 /**
- * A car already in the yard, listed for direct sale — the `cars` post type in
- * WordPress, edited through the `saleCarFields` ACF group.
+ * A car already in the yard and listed for direct sale in the local content
+ * catalog.
  *
  * It is deliberately close to `ImportCar` so the two sections of /cars can
  * share cards, formatting and the mapper. Three fields differ, and the
@@ -22,10 +21,6 @@ export type SaleCar = {
   model: string
   subtitle: Localized
   bodyType: Localized
-  /** Raw ACF body_type key (van, pickup, truck …) — drives the lineup categories. */
-  bodyTypeKey: string
-  /** Taxi licensing / parallel-import eligibility (ACF vehicle_uses, or derived). */
-  uses: VehicleUse[]
   condition: SaleCarCondition
   status: SaleCarStatus
   year: number

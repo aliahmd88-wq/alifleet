@@ -1,27 +1,20 @@
-import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { isWpConfigured } from '@/lib/wp/config'
-import { getAuthToken } from '@/lib/auth/session'
+import type { Metadata } from 'next'
 import { AuthShell } from '@/components/account/auth-shell'
 import { LoginForm } from '@/components/account/login-form'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Sign in | ALI FLEET',
-  description:
-    'Sign in to your ALI FLEET account to track spare parts orders, manage delivery addresses and reorder in seconds.',
+  description: 'Securely sign in to your ALI FLEET account.',
   robots: { index: false, follow: false },
 }
 
-export default async function LoginPage() {
-  // Already signed in? Skip the form entirely.
-  if (await getAuthToken()) redirect('/account')
-
+export default function LoginPage() {
   return (
-    <AuthShell screen="login" configured={isWpConfigured()}>
-      <Suspense>
-        <LoginForm />
-      </Suspense>
+    <AuthShell screen="login" configured>
+      <Suspense fallback={null}><LoginForm /></Suspense>
     </AuthShell>
   )
 }

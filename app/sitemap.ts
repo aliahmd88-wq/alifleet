@@ -1,33 +1,16 @@
 import type { MetadataRoute } from 'next'
 
-import { siteUrl } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/seo'
 import { locales } from '@/lib/i18n/config'
 import { toPublicPathname } from '@/lib/i18n/routing'
-import { getCatalog } from '@/lib/wp/catalog'
-import { getPosts } from '@/lib/wp/posts'
-import { getSaleCars } from '@/lib/wp/sale-cars'
-import { getVehicles } from '@/lib/wp/vehicles'
+import { getCatalog } from '@/lib/content/catalog'
+import { getPosts } from '@/lib/content/posts'
+import { getSaleCars } from '@/lib/content/sale-cars'
+import { getVehicles } from '@/lib/content/vehicles'
 
 /**
- * Public URLs keep the trailing slash that toPublicPathname makes canonical
- * (`/products/`, `/ar/products-ar/`). absoluteUrl() strips it, and a slash-less
- * URL is exactly what the locale proxy redirects, so the sitemap must not
- * hand search engines the redirected form.
- */
-function canonicalUrl(publicPathname: string): string {
-  return `${siteUrl()}${publicPathname}`
-}
-
-/**
- * Sitemap for the storefront.
- *
- * The static routes are listed by hand; everything else is read live from
- * WordPress, so a product or article published in the CMS enters the sitemap
- * on the next revalidation without a code change.
- *
- * Each WordPress read is guarded: a CMS outage must degrade the sitemap to its
- * static routes rather than fail the whole response, because a 500 here tells
- * search engines the site is broken.
+ * Sitemap for the independent storefront. Local catalog records are added to
+ * the static routes so products, vehicles, and articles remain discoverable.
  */
 export const revalidate = 3600
 
@@ -55,17 +38,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
   const [catalog, posts, vehicles, saleCars] = await Promise.all([
-    safe(getCatalog, { parts: [], status: 'not_configured' as const, hasUntranslated: false }, 'catalog'),
-    safe(getPosts, { posts: [], featured: null, status: 'not_configured' as const }, 'posts'),
-    safe(getVehicles, { cars: [], status: 'not_configured' as const }, 'vehicles'),
-    safe(getSaleCars, { cars: [], status: 'not_configured' as const }, 'sale cars'),
+    safe(
+      getCatalog,
+      { parts: [], categories: [], status: 'empty' as const, hasUntranslated: false },
+      'catalog',
+    ),
+    safe(getPosts, { posts: [], featured: null, status: 'empty' as const }, 'posts'),
+    safe(getVehicles, { cars: [], status: 'empty' as const }, 'vehicles'),
+    safe(getSaleCars, { cars: [], status: 'empty' as const }, 'sale cars'),
   ])
 
   const entries: Entry[] = []
   const addLocalized = (path: string, details: Omit<Entry, 'url'>) => {
     for (const locale of locales) {
       entries.push({
-        url: canonicalUrl(toPublicPathname(path, locale)),
+        url: absoluteUrl(toPublicPathname(path, locale)),
         ...details,
       })
     }

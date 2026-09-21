@@ -2,21 +2,36 @@
 
 import type { PartSummary } from '@/lib/data/parts'
 import { useLanguage } from '@/lib/i18n/language-context'
+import { useSiteContent } from '@/lib/admin/site-content-context'
 import { PageHero } from '@/components/page-hero'
 import { CartView } from '@/components/cart-view'
+import type { CheckoutDefaults } from '@/lib/commerce/types'
 
 /**
  * Client shell for the cart page. The catalog arrives from the server so the
- * hero copy can stay localized here while prices and WooCommerce product ids
- * come from a fresh read rather than whatever the browser cached.
+ * hero copy can stay localized here while prices come from a fresh read
+ * rather than whatever the browser cached.
  */
-export function CartScreen({ catalog }: { catalog: PartSummary[] }) {
-  const { t } = useLanguage()
+export function CartScreen({
+  catalog,
+  checkoutDefaults,
+}: {
+  catalog: PartSummary[]
+  checkoutDefaults: CheckoutDefaults
+}) {
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
+
+  // The cart page header is admin-editable (pages.cart); dictionary is fallback.
+  const page = content.pages?.cart
+  const eyebrow = tStr(page?.eyebrow, locale) || t.nav.cart
+  const title = tStr(page?.title, locale) || t.cart.title
+  const lead = tStr(page?.lead, locale) || t.cart.lead
 
   return (
     <>
-      <PageHero eyebrow={t.nav.cart} title={t.cart.title} lead={t.cart.lead} />
-      <CartView catalog={catalog} />
+      <PageHero eyebrow={eyebrow} title={title} lead={lead} bannerImage={page?.bannerImage} />
+      <CartView catalog={catalog} checkoutDefaults={checkoutDefaults} />
     </>
   )
 }

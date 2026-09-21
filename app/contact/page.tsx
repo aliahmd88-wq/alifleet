@@ -1,20 +1,22 @@
 import type { Metadata } from 'next'
-import { getDictionary } from '@/lib/i18n/dictionaries'
-import { pageAlternates } from '@/lib/seo/alternates'
-import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ContactSection } from '@/components/contact-section'
+import { getPublicMetadata } from '@/lib/content/metadata'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
-/** Title and description follow the visitor's language (see t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  return {
-    title: t.seo.contactTitle,
-    description: t.seo.contactDescription,
-    alternates: pageAlternates('/contact/', locale),
-  }
+  return getPublicMetadata({
+    entityType: 'page',
+    entityId: 'contact',
+    locale: await getRequestLocale(),
+    fallback: {
+      title: 'Contact | ALI FLEET',
+      description: 'Talk to ALI FLEET about spare parts, vehicle imports, or a fleet plan.',
+      path: '/contact',
+      image: '/images/contact-hero.png',
+    },
+  })
 }
 
 export default function ContactPage() {

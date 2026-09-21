@@ -1,150 +1,145 @@
 import 'server-only'
 
-import { wpFetch } from '@/lib/wp/client'
-import { CUSTOMER_WITH_ORDERS, VIEWER } from '@/lib/wp/operations'
-import { WpError } from '@/lib/wp/errors'
-import { isWpConfigured } from '@/lib/wp/config'
-import {
-  normalizeAddress,
-  normalizeStatus,
-  type AccountData,
-  type Customer,
-  type Viewer,
-} from '@/lib/wp/types'
-import { getAuthToken } from './session'
+import { createClient } from '@/lib/supabase/server'
+import { emptyAddress, type AccountData, type CustomerAddress, type CustomerOrder, type OrderStatus, type Viewer } from './types'
+import type { Json } from '@/lib/supabase/database.types'
 
-/**
- * Loads everything the account area needs. Returns a tagged result instead of
- * throwing so each page can render a translated explanation — the backend is
- * not connected yet, and that must not look like a crash.
- */
+function numericId(value: string) {
+  return Number.parseInt(value.replace(/-/g, '').slice(0, 8), 16) || 0
+}
+
+function splitName(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean)
+  return { firstName: parts.shift() || '', lastName: parts.join(' ') }
+}
+
+function localized(value: Json, fallback: string) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const map = value as Record<string, Json | undefined>
+    for (const locale of ['ar', 'en', 'he']) {
+      if (typeof map[locale] === 'string' && map[locale]) return map[locale]
+    }
+  }
+  return fallback
+}
+
+function money(minor: number) {
+  return `₪${(minor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function accountStatus(status: string): OrderStatus {
+  if (status === 'completed' || status === 'delivered') return 'completed'
+  if (status === 'cancelled') return 'cancelled'
+  if (status === 'pending') return 'pending'
+  return 'processing'
+}
+
+function toAddress(row: {
+  full_name: string
+  company: string | null
+  street: string
+  address_line_2: string | null
+  city: string
+  state: string | null
+  postal_code: string | null
+  country: string
+  phone: string
+}, email = ''): CustomerAddress {
+  const name = splitName(row.full_name)
+  return {
+    ...name,
+    company: row.company || '',
+    address1: row.street,
+    address2: row.address_line_2 || '',
+    city: row.city,
+    state: row.state || '',
+    postcode: row.postal_code || '',
+    country: row.country,
+    phone: row.phone,
+    email,
+  }
+}
+
 export async function loadAccount(orderLimit = 20): Promise<AccountData> {
-  if (!isWpConfigured()) return { state: 'error', code: 'not_configured' }
+  const supabase = await createClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const user = userData.user
+  if (userError || !user) return { state: 'error', code: 'not_logged_in' }
 
-  try {
-    const authToken = await getAuthToken()
-    if (!authToken) return { state: 'error', code: 'not_logged_in' }
+  const [profileResult, addressResult, orderResult] = await Promise.all([
+    supabase.from('profiles').select('id,email,display_name,username,phone,created_at').eq('id', user.id).single(),
+    supabase.from('addresses').select('id,kind,full_name,company,street,address_line_2,city,state,postal_code,country,phone,is_default').eq('user_id', user.id).order('is_default', { ascending: false }),
+    supabase.from('orders').select('id,order_number,created_at,status,total_minor,subtotal_minor,tax_minor,shipping_minor,payment_method,payment_status').eq('user_id', user.id).order('created_at', { ascending: false }).limit(orderLimit),
+  ])
 
-    const [viewerData, customerData] = await Promise.all([
-      wpFetch<{ viewer: Record<string, unknown> | null }>(VIEWER, {}, { authToken }),
-      wpFetch<{ customer: Record<string, unknown> | null }>(
-        CUSTOMER_WITH_ORDERS,
-        { first: orderLimit },
-        { authToken }
-      ),
-    ])
-
-    const rawViewer = viewerData.viewer
-    if (!rawViewer) return { state: 'error', code: 'not_logged_in' }
-
-    const viewer: Viewer = {
-      databaseId: Number(rawViewer.databaseId ?? 0),
-      username: String(rawViewer.username ?? ''),
-      email: String(rawViewer.email ?? ''),
-      firstName: String(rawViewer.firstName ?? ''),
-      lastName: String(rawViewer.lastName ?? ''),
-      name: String(rawViewer.name ?? ''),
-      registeredDate: rawViewer.registeredDate
-        ? String(rawViewer.registeredDate)
-        : null,
-    }
-
-    const customer = mapCustomer(customerData.customer, viewer)
-    return { state: 'ready', customer, viewer }
-  } catch (error) {
-    const code = error instanceof WpError ? error.code : 'unknown'
-    if (!(error instanceof WpError)) {
-      console.log('[v0] Unexpected error loading account:', error)
-    }
-    return { state: 'error', code }
+  if (profileResult.error || addressResult.error || orderResult.error || !profileResult.data) {
+    return { state: 'error', code: 'unknown' }
   }
-}
 
-/**
- * Cheap session probe for the shared layout: resolves just enough to render the
- * header's signed-in state, without touching WooCommerce or order history.
- * Returns null whenever nobody is signed in or the backend is unavailable.
- */
-export async function loadViewer(): Promise<Viewer | null> {
-  if (!isWpConfigured()) return null
+  const orders = orderResult.data || []
+  const orderIds = orders.map((order) => order.id)
+  const itemResult = orderIds.length
+    ? await supabase.from('order_items').select('order_id,product_id,product_name,sku,quantity,line_total_minor').in('order_id', orderIds)
+    : { data: [], error: null }
+  if (itemResult.error) return { state: 'error', code: 'unknown' }
 
-  try {
-    const authToken = await getAuthToken()
-    if (!authToken) return null
+  const mappedOrders: CustomerOrder[] = orders.map((order) => ({
+    databaseId: numericId(order.id),
+    orderNumber: order.order_number,
+    date: order.created_at,
+    status: accountStatus(order.status),
+    total: money(order.total_minor),
+    subtotal: money(order.subtotal_minor),
+    totalTax: money(order.tax_minor),
+    shippingTotal: money(order.shipping_minor),
+    paymentMethodTitle: order.payment_method === 'bank_transfer' ? 'Bank transfer — unpaid' : 'Pay on delivery — unpaid',
+    lines: (itemResult.data || []).filter((item) => item.order_id === order.id).map((item) => ({
+      name: localized(item.product_name, item.sku),
+      slug: item.product_id,
+      quantity: item.quantity,
+      total: money(item.line_total_minor),
+    })),
+  }))
 
-    const { viewer } = await wpFetch<{ viewer: Record<string, unknown> | null }>(
-      VIEWER,
-      {},
-      { authToken }
-    )
-    if (!viewer) return null
+  const profile = profileResult.data
+  const metadataFirst = typeof user.user_metadata.first_name === 'string' ? user.user_metadata.first_name : ''
+  const metadataLast = typeof user.user_metadata.last_name === 'string' ? user.user_metadata.last_name : ''
+  const fallbackName = splitName(profile.display_name)
+  const firstName = metadataFirst || fallbackName.firstName
+  const lastName = metadataLast || fallbackName.lastName
+  const billingRow = addressResult.data?.find((address) => address.kind === 'billing')
+  const shippingRow = addressResult.data?.find((address) => address.kind === 'shipping')
+  const billing = billingRow ? toAddress(billingRow, profile.email) : { ...emptyAddress(), email: profile.email }
+  const shipping = shippingRow ? toAddress(shippingRow) : emptyAddress()
 
-    return {
-      databaseId: Number(viewer.databaseId ?? 0),
-      username: String(viewer.username ?? ''),
-      email: String(viewer.email ?? ''),
-      firstName: String(viewer.firstName ?? ''),
-      lastName: String(viewer.lastName ?? ''),
-      name: String(viewer.name ?? ''),
-      registeredDate: viewer.registeredDate
-        ? String(viewer.registeredDate)
-        : null,
-    }
-  } catch {
-    // A dead or half-configured backend must never break page rendering.
-    return null
+  const viewer: Viewer = {
+    databaseId: numericId(user.id),
+    username: profile.username || profile.email.split('@')[0],
+    email: profile.email,
+    firstName,
+    lastName,
+    name: profile.display_name || `${firstName} ${lastName}`.trim(),
+    registeredDate: profile.created_at,
   }
-}
-
-/**
- * Falls back to the WordPress user when WooCommerce has no customer record yet
- * (a brand-new account that has never checked out).
- */
-function mapCustomer(
-  raw: Record<string, unknown> | null,
-  viewer: Viewer
-): Customer {
-  const source = raw ?? {}
-  const orderNodes =
-    ((source.orders as { nodes?: unknown[] } | undefined)?.nodes ?? []) as Record<
-      string,
-      unknown
-    >[]
 
   return {
-    databaseId: Number(source.databaseId ?? viewer.databaseId),
-    email: String(source.email ?? viewer.email),
-    firstName: String(source.firstName ?? viewer.firstName),
-    lastName: String(source.lastName ?? viewer.lastName),
-    displayName: String(source.displayName ?? viewer.name),
-    date: source.date ? String(source.date) : viewer.registeredDate,
-    billing: normalizeAddress(source.billing),
-    shipping: normalizeAddress(source.shipping),
-    orders: orderNodes.map((node) => {
-      const lineNodes =
-        ((node.lineItems as { nodes?: unknown[] } | undefined)?.nodes ??
-          []) as Record<string, unknown>[]
-      return {
-        databaseId: Number(node.databaseId ?? 0),
-        orderNumber: String(node.orderNumber ?? node.databaseId ?? ''),
-        date: node.date ? String(node.date) : null,
-        status: normalizeStatus(node.status),
-        total: String(node.total ?? ''),
-        subtotal: String(node.subtotal ?? ''),
-        totalTax: String(node.totalTax ?? ''),
-        shippingTotal: String(node.shippingTotal ?? ''),
-        paymentMethodTitle: String(node.paymentMethodTitle ?? ''),
-        lines: lineNodes.map((line) => {
-          const product = (line.product as { node?: Record<string, unknown> })
-            ?.node
-          return {
-            name: String(product?.name ?? ''),
-            slug: product?.slug ? String(product.slug) : null,
-            quantity: Number(line.quantity ?? 0),
-            total: String(line.total ?? ''),
-          }
-        }),
-      }
-    }),
+    state: 'ready',
+    viewer,
+    customer: {
+      databaseId: numericId(user.id),
+      email: profile.email,
+      firstName,
+      lastName,
+      displayName: profile.display_name || viewer.name,
+      date: profile.created_at,
+      billing,
+      shipping,
+      orders: mappedOrders,
+    },
   }
+}
+
+export async function loadViewer(): Promise<Viewer | null> {
+  const data = await loadAccount(0)
+  return data.state === 'ready' ? data.viewer : null
 }

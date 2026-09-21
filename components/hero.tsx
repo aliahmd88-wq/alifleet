@@ -12,11 +12,12 @@ import {
   Truck,
 } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/language-context'
-import type { PageImages } from '@/lib/wp/page-images'
+import { useSiteContent } from '@/lib/admin/site-content-context'
+import type { PageImages } from '@/lib/content/types'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Fallback sources used when WP has not provided a value
+// Bundled image fallbacks
 const FALLBACK_SLIDE_SRCS = [
   '/images/hero-showroom.png',
   '/images/truck-light.png',
@@ -26,32 +27,47 @@ const FALLBACK_SLIDE_SRCS = [
   '/images/import-global.png',
 ]
 
-export function Hero({ wpImages }: { wpImages?: PageImages }) {
+export function Hero({ initialImages }: { initialImages?: PageImages }) {
   const sectionRef = useRef<HTMLElement>(null)
   const [active, setActive] = useState(0)
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
+  const heroContent = content?.pages?.home?.hero
 
-  // Merge WP images with local fallbacks slot-by-slot
-  const slideSrcs = wpImages
+  const adminHeroImage = heroContent?.heroImage
+  const adminSlideImages = heroContent?.slideImages || []
+
+  // Merge live admin values with the server snapshot and bundled fallbacks.
+  const baseSlideSrcs = initialImages
     ? [
-        wpImages.heroSlide1 || FALLBACK_SLIDE_SRCS[0],
-        wpImages.heroSlide2 || FALLBACK_SLIDE_SRCS[1],
-        wpImages.heroSlide3 || FALLBACK_SLIDE_SRCS[2],
-        wpImages.heroSlide4 || FALLBACK_SLIDE_SRCS[3],
-        wpImages.heroSlide5 || FALLBACK_SLIDE_SRCS[4],
-        FALLBACK_SLIDE_SRCS[5], // slot 6 has no WP counterpart yet
+        initialImages.heroSlide1 || FALLBACK_SLIDE_SRCS[0],
+        initialImages.heroSlide2 || FALLBACK_SLIDE_SRCS[1],
+        initialImages.heroSlide3 || FALLBACK_SLIDE_SRCS[2],
+        initialImages.heroSlide4 || FALLBACK_SLIDE_SRCS[3],
+        initialImages.heroSlide5 || FALLBACK_SLIDE_SRCS[4],
+        FALLBACK_SLIDE_SRCS[5],
       ]
     : FALLBACK_SLIDE_SRCS
 
-  const avatarSrc = wpImages?.heroAvatarImage || '/images/hero-avatars.png'
+  const slideSrcs = [
+    adminHeroImage || adminSlideImages[0] || baseSlideSrcs[0],
+    adminSlideImages[1] || baseSlideSrcs[1],
+    adminSlideImages[2] || baseSlideSrcs[2],
+    adminSlideImages[3] || baseSlideSrcs[3],
+    adminSlideImages[4] || baseSlideSrcs[4],
+    adminSlideImages[5] || baseSlideSrcs[5],
+  ]
+
+  const avatarSrc = heroContent?.avatarImage || initialImages?.heroAvatarImage || '/images/hero-avatars.png'
+  const customLabels = heroContent?.slideLabels || []
 
   const slides = [
-    { src: slideSrcs[0], label: t.home.heroSlides.flagship, alt: t.home.heroAvatarAlt },
-    { src: slideSrcs[1], label: t.home.heroSlides.trucks, alt: t.home.heroSlides.trucks },
-    { src: slideSrcs[2], label: t.home.heroSlides.vans, alt: t.home.heroSlides.vans },
-    { src: slideSrcs[3], label: t.home.heroSlides.suvs, alt: t.home.heroSlides.suvs },
-    { src: slideSrcs[4], label: t.home.heroSlides.highway, alt: t.home.heroSlides.highway },
-    { src: slideSrcs[5], label: t.home.heroSlides.imports, alt: t.home.heroSlides.imports },
+    { src: slideSrcs[0], label: tStr(customLabels[0], locale) || t.home.heroSlides.flagship, alt: t.home.heroAvatarAlt },
+    { src: slideSrcs[1], label: tStr(customLabels[1], locale) || t.home.heroSlides.trucks, alt: t.home.heroSlides.trucks },
+    { src: slideSrcs[2], label: tStr(customLabels[2], locale) || t.home.heroSlides.vans, alt: t.home.heroSlides.vans },
+    { src: slideSrcs[3], label: tStr(customLabels[3], locale) || t.home.heroSlides.suvs, alt: t.home.heroSlides.suvs },
+    { src: slideSrcs[4], label: tStr(customLabels[4], locale) || t.home.heroSlides.highway, alt: t.home.heroSlides.highway },
+    { src: slideSrcs[5], label: tStr(customLabels[5], locale) || t.home.heroSlides.imports, alt: t.home.heroSlides.imports },
   ]
 
   const total = slides.length
@@ -110,7 +126,7 @@ export function Hero({ wpImages }: { wpImages?: PageImages }) {
             <h1 className="text-balance text-5xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-6xl xl:text-[4.25rem]">
               <span className="block overflow-hidden pb-1">
                 <span data-hero-line className="flex items-center gap-3">
-                  {t.home.heroLine1}
+                  {tStr(heroContent?.line1, locale) || t.home.heroLine1}
                   <span className="hidden h-9 w-[4.5rem] shrink-0 items-center overflow-hidden rounded-full border-[3px] border-background shadow-md md:inline-flex xl:h-11 xl:w-[5.5rem]">
                     <Image
                       src={avatarSrc}
@@ -124,17 +140,17 @@ export function Hero({ wpImages }: { wpImages?: PageImages }) {
               </span>
               <span className="block overflow-hidden pb-1">
                 <span data-hero-line className="block">
-                  {t.home.heroLine2}
+                  {tStr(heroContent?.line2, locale) || t.home.heroLine2}
                 </span>
               </span>
               <span className="block overflow-hidden pb-1">
                 <span data-hero-line className="block">
-                  {t.home.heroLine3}
+                  {tStr(heroContent?.line3, locale) || t.home.heroLine3}
                 </span>
               </span>
               <span className="block overflow-hidden pb-2">
                 <span data-hero-line className="block">
-                  {t.home.heroLine4}
+                  {tStr(heroContent?.line4, locale) || t.home.heroLine4}
                 </span>
               </span>
             </h1>
@@ -154,7 +170,7 @@ export function Hero({ wpImages }: { wpImages?: PageImages }) {
                 {t.nav.brand}
               </p>
               <p className="mt-3 max-w-[17rem] text-pretty text-[13px] font-bold uppercase leading-relaxed tracking-wide text-foreground">
-                {t.home.heroDescription}
+                {tStr(heroContent?.subtitle, locale) || t.home.heroDescription}
               </p>
             </div>
 
@@ -180,6 +196,7 @@ export function Hero({ wpImages }: { wpImages?: PageImages }) {
                 fill
                 className="scale-105 animate-in fade-in object-cover duration-500"
                 priority
+                loading="eager"
                 quality={82}
                 sizes="(max-width: 1024px) 100vw, 60vw"
               />

@@ -17,9 +17,6 @@ const statusStyles: Record<SaleCar['status'], string> = {
 
 export function SaleCarCard({ car }: { car: SaleCar }) {
   const { t, locale } = useLanguage()
-  // Localized name first (what customers search for), the Latin model name underneath.
-  const name = car.subtitle[locale] || car.model
-  const secondary = name === car.model ? '' : car.model
   const store = useStore()
 
   // A brand-new car has no meaningful odometer reading, so showing "0 km"
@@ -55,22 +52,12 @@ export function SaleCarCard({ car }: { car: SaleCar }) {
 
         <h3 className="mt-2 text-pretty text-lg font-semibold leading-snug text-foreground">
           <LocaleLink href={`/cars/sale/${car.slug}`} className="hover:text-accent">
-            {name}
+            {car.model}
           </LocaleLink>
         </h3>
         <p className="mt-1.5 text-pretty text-sm leading-relaxed text-muted-foreground">
-          {secondary}
+          {car.subtitle[locale]}
         </p>
-        {car.uses.length > 0 && (
-          <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t.cars.usesLabel}>
-            {car.uses.includes('taxi') && (
-              <li className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">{t.cars.badgeTaxi}</li>
-            )}
-            {car.uses.includes('parallel_import') && (
-              <li className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold text-foreground">{t.cars.badgeParallel}</li>
-            )}
-          </ul>
-        )}
 
         <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">

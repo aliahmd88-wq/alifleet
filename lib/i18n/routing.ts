@@ -6,13 +6,11 @@ import {
 
 const PRIVATE_ROUTE_ROOTS = new Set([
   'account',
+  'admin',
   'api',
   'cart',
-  'checkout',
-  'cms',
   'my-account',
-  'setup',
-  'wc-ajax',
+  'track-order',
 ])
 
 const LEGACY_ROUTE_ALIASES: Record<string, string> = {

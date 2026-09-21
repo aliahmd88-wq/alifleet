@@ -2,38 +2,36 @@
 
 import { PackageX } from 'lucide-react'
 import LocaleLink from '@/components/locale-link'
-import type { PartSummary } from '@/lib/data/parts'
-import type { CatalogStatus } from '@/lib/wp/catalog'
+import type { CatalogCategory, PartSummary } from '@/lib/data/parts'
+import type { CatalogStatus } from '@/lib/content/catalog'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { PageHero } from '@/components/page-hero'
 import { ProductsBrowser } from '@/components/products-browser'
+import { useSiteContent } from '@/lib/admin/site-content-context'
 
-/**
- * Client shell for the spare-parts page.
- *
- * The catalog is fetched on the server and handed down, so this component only
- * decides what to show: the browser when there are products, or a localized
- * explanation of why there are none. A silent empty grid would look identical
- * whether the store is offline or genuinely has nothing published.
- */
 export function ProductsScreen({
   parts,
+  categories,
   status,
   hasUntranslated,
 }: {
   parts: PartSummary[]
+  categories: CatalogCategory[]
   status: CatalogStatus
   hasUntranslated: boolean
 }) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const { content, tStr } = useSiteContent()
+  const productsPage = content?.pages?.products
 
   return (
     <>
       <PageHero
-        eyebrow={t.products.eyebrow}
-        title={t.products.title}
-        titleEm={t.products.titleEm}
-        lead={t.products.lead}
+        eyebrow={tStr(productsPage?.eyebrow, locale) || t.products.eyebrow}
+        title={tStr(productsPage?.title, locale) || t.products.title}
+        titleEm={tStr(productsPage?.titleEm, locale) || t.products.titleEm}
+        lead={tStr(productsPage?.lead, locale) || t.products.lead}
+        bannerImage={productsPage?.bannerImage}
       />
 
       {parts.length === 0 ? (
@@ -69,7 +67,7 @@ export function ProductsScreen({
               </p>
             </div>
           )}
-          <ProductsBrowser parts={parts} />
+          <ProductsBrowser parts={parts} categories={categories} />
         </>
       )}
     </>

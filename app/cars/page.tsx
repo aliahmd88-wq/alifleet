@@ -1,33 +1,38 @@
 import type { Metadata } from 'next'
-import { getDictionary } from '@/lib/i18n/dictionaries'
-import { pageAlternates } from '@/lib/seo/alternates'
-import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CarsHero } from '@/components/cars-hero'
+import { SaleBrowser } from '@/components/sale-browser'
 import { ImportSteps } from '@/components/import-steps'
-import { VehicleLineup } from '@/components/vehicle-lineup'
-import { VehicleFaq } from '@/components/vehicle-faq'
+import { ImportBrowser } from '@/components/import-browser'
 import { ImportCustomCta } from '@/components/import-custom-cta'
-import { getVehicles } from '@/lib/wp/vehicles'
-import { getSaleCars } from '@/lib/wp/sale-cars'
-import { getCarsPageCopy } from '@/lib/wp/cars-page'
+import { getVehicles } from '@/lib/content/vehicles'
+import { getSaleCars } from '@/lib/content/sale-cars'
+import { getCarsPageCopy } from '@/lib/content/page-content'
+import { getPublicMetadata } from '@/lib/content/metadata'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
-/** Title and description follow the visitor's language (see t.seo). */
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale()
-  const t = getDictionary(locale)
-  return {
-    title: t.seo.carsTitle,
-    description: t.seo.carsDescription,
-    alternates: pageAlternates('/cars/', locale),
-  }
+  return getPublicMetadata({
+    entityType: 'page',
+    entityId: 'cars',
+    locale: await getRequestLocale(),
+    fallback: {
+      title: 'Cars | ALI FLEET',
+      description: 'Cars for sale and managed vehicle import from sourcing through customs and delivery.',
+      path: '/cars',
+      image: '/images/import-luxury-suv.png',
+    },
+  })
 }
 
 /**
- * One page, one lineup: new vehicles to order and used vehicles from the lot
- * share a grid with a new/used switch and a category row (see VehicleLineup).
- * The ordering steps and the "another vehicle" prompt follow the grid.
+ * One page, two businesses.
+ *
+ * "For sale" comes first because it is the shorter path to a purchase — those
+ * cars exist today and can be handed over this week. Import follows, with its
+ * four-step explainer, because it is a commissioned service that needs to
+ * explain itself before its listings mean anything.
  *
  * Both inventories are fetched in parallel with the page's editable copy: they
  * hit different post types and none blocks the others, so a slow or broken
@@ -46,14 +51,13 @@ export default async function CarsPage() {
       <SiteHeader />
       <main>
         <CarsHero copy={copy.hero} />
-        <VehicleLineup
-          newCars={imports.cars}
-          newStatus={imports.status}
-          usedCars={sale.cars}
-          usedStatus={sale.status}
-        />
-        <VehicleFaq />
+        <SaleBrowser cars={sale.cars} status={sale.status} copy={copy.saleHeader} />
         <ImportSteps />
+        <ImportBrowser
+          cars={imports.cars}
+          status={imports.status}
+          copy={copy.importHeader}
+        />
         <ImportCustomCta />
       </main>
       <SiteFooter />

@@ -1,362 +1,247 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
-import { HANDOFF_QUANTITY_COOKIE, isWooStateCookie } from '@/lib/checkout/gate'
-import { wpFetch } from '@/lib/wp/client'
-import { WpError, type AuthErrorCode } from '@/lib/wp/errors'
-import { isWpConfigured } from '@/lib/wp/config'
-import { wordpressSecurityHeaders } from '@/lib/wp/request-security'
-import {
-  LOGIN,
-  REGISTER_USER,
-  SEND_PASSWORD_RESET,
-  UPDATE_CUSTOMER_ADDRESSES,
-  UPDATE_CUSTOMER_PROFILE,
-} from '@/lib/wp/operations'
-import type { AuthActionState } from '@/lib/wp/types'
-import {
-  clearSessionCookies,
-  getAuthToken,
-  setSessionCookies,
-} from './session'
+import { z } from 'zod'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
+import type { AuthActionState, AuthErrorCode } from './types'
 
-const fail = (
-  code: AuthErrorCode,
-  fieldErrors?: AuthActionState['fieldErrors']
-): AuthActionState => ({ status: 'error', code, fieldErrors })
+const emailSchema = z.string().trim().email().max(254)
+const passwordSchema = z.string().min(8).max(128)
+const usernameSchema = z.string().trim().toLowerCase().regex(/^[a-z0-9_.-]{3,40}$/)
+const text = (max: number) => z.string().trim().max(max)
 
-const codeOf = (error: unknown): AuthErrorCode => {
-  if (error instanceof WpError) return error.code
-  const errorName = error instanceof Error ? error.name : 'UnknownError'
-  console.error('[AliFleet] Unexpected authentication error.', { errorName })
+function errorState(code: AuthErrorCode, field?: string): AuthActionState {
+  return { status: 'error', code, fieldErrors: field ? { [field]: code } : undefined }
+}
+
+function safeRedirect(value: FormDataEntryValue | null, fallback = '/account') {
+  const path = String(value || fallback)
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') ? path : fallback
+}
+
+async function callbackUrl(next: string) {
+  const configured = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL
+  if (configured) {
+    const url = new URL(configured)
+    url.searchParams.set('next', next)
+    return url.toString()
+  }
+  const requestHeaders = await headers()
+  const host = requestHeaders.get('x-forwarded-host') || requestHeaders.get('host')
+  const protocol = requestHeaders.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
+  return `${protocol}://${host}/auth/callback?next=${encodeURIComponent(next)}`
+}
+
+function mapAuthError(error: { code?: string; status?: number; message?: string }, context: 'login' | 'register' | 'reset'): AuthErrorCode {
+  if (error.status === 429 || error.code?.includes('rate_limit')) return 'rate_limited'
+  if (error.code === 'email_not_confirmed') return 'email_unconfirmed'
+  if (error.code === 'weak_password') return 'weak_password'
+  if (context === 'login' && ['invalid_credentials', 'user_not_found'].includes(error.code || '')) return 'invalid_credentials'
+  if (context === 'register' && error.message?.includes('profiles_username_key')) return 'username_exists'
+  if (context === 'reset') return 'reset_unavailable'
   return 'unknown'
 }
 
-const text = (data: FormData, key: string) =>
-  String(data.get(key) ?? '').trim()
+async function resolveEmail(identifier: string): Promise<string | null> {
+  const email = emailSchema.safeParse(identifier)
+  if (email.success) return email.data.toLowerCase()
 
-/**
- * The sign-in and reset forms label this input `usernameOrEmail` (WordPress
- * accepts either), while the register form calls it `username`. Reading both
- * keys keeps the server action tolerant of whichever form posted to it.
- */
-const identifier = (data: FormData) =>
-  text(data, 'usernameOrEmail') || text(data, 'username')
-
-/** Only used to catch obvious typos client-side validation may have missed. */
-const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
-
-/* -------------------------------------------------------------------------- */
-/*  Sign in                                                                    */
-/* -------------------------------------------------------------------------- */
+  const username = usernameSchema.safeParse(identifier)
+  if (!username.success) return null
+  const { data, error } = await createAdminClient()
+    .from('profiles')
+    .select('email')
+    .eq('username', username.data)
+    .maybeSingle()
+  return error ? null : data?.email ?? null
+}
 
 export async function loginAction(
-  _prev: AuthActionState,
-  formData: FormData
+  _previous: AuthActionState,
+  formData: FormData,
 ): Promise<AuthActionState> {
-  if (!isWpConfigured()) return fail('not_configured')
+  const identifier = String(formData.get('usernameOrEmail') || '').trim()
+  const password = String(formData.get('password') || '')
+  if (!identifier || !password) return errorState('missing_fields')
 
-  const username = identifier(formData)
-  const password = String(formData.get('password') ?? '')
-  const redirectTo = text(formData, 'redirectTo') || '/account'
+  const email = await resolveEmail(identifier)
+  if (!email) return errorState('invalid_credentials')
 
-  const fieldErrors: AuthActionState['fieldErrors'] = {}
-  if (!username) fieldErrors.usernameOrEmail = 'missing_fields'
-  if (!password) fieldErrors.password = 'missing_fields'
-  if (Object.keys(fieldErrors).length) return fail('missing_fields', fieldErrors)
-
-  const securityHeaders = await wordpressSecurityHeaders()
-  try {
-    const data = await wpFetch<{
-      login: {
-        authToken: string | null
-        refreshToken: string | null
-      } | null
-    }>(LOGIN, { username, password }, { securityHeaders })
-
-    const authToken = data.login?.authToken
-    const refreshToken = data.login?.refreshToken
-    if (!authToken || !refreshToken) return fail('invalid_credentials')
-
-    await setSessionCookies({ authToken, refreshToken })
-  } catch (error) {
-    return fail(codeOf(error))
-  }
-
-  // Outside the try block: redirect() signals by throwing, and must not be
-  // swallowed by the error handler above.
-  //
-  // No revalidatePath here on purpose. Account pages are already fetched with
-  // `cache: 'no-store'`, so there is nothing cached to purge — but the call
-  // still forces Next.js to render the destination *inside* the action before
-  // the browser is allowed to navigate. That is what left the sign-in button
-  // spinning for over 30 seconds with no error and no transition (QA-05).
-  redirect(sanitizeRedirect(redirectTo))
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Register                                                                   */
-/* -------------------------------------------------------------------------- */
-
-export async function registerAction(
-  _prev: AuthActionState,
-  formData: FormData
-): Promise<AuthActionState> {
-  if (!isWpConfigured()) return fail('not_configured')
-
-  const email = text(formData, 'email')
-  const username = text(formData, 'username') || email
-  const password = String(formData.get('password') ?? '')
-  const confirm = String(formData.get('confirmPassword') ?? '')
-  const firstName = text(formData, 'firstName')
-  const lastName = text(formData, 'lastName')
-
-  const fieldErrors: AuthActionState['fieldErrors'] = {}
-  if (!email) fieldErrors.email = 'missing_fields'
-  else if (!looksLikeEmail(email)) fieldErrors.email = 'invalid_email'
-  if (!password) fieldErrors.password = 'missing_fields'
-  else if (password.length < 8) fieldErrors.password = 'weak_password'
-  if (password !== confirm) fieldErrors.confirmPassword = 'password_mismatch'
-  if (Object.keys(fieldErrors).length) {
-    return fail(fieldErrors.confirmPassword ?? 'missing_fields', fieldErrors)
-  }
-
-  const securityHeaders = await wordpressSecurityHeaders()
-  try {
-    await wpFetch<{ registerUser: { user: { databaseId: number } | null } | null }>(
-      REGISTER_USER,
-      { username, email, password, firstName, lastName },
-      { securityHeaders }
-    )
-  } catch (error) {
-    return fail(codeOf(error))
-  }
-
-  // From here on the WordPress account EXISTS. Auto-login is a convenience and
-  // its failure must never be reported as a failed registration — otherwise the
-  // visitor retries and hits "email already exists" on an account that is
-  // genuinely theirs. This is exactly what happens when the WPGraphQL JWT
-  // Authentication plugin is absent (no `login` field in the schema) or when the
-  // site requires email confirmation before first sign-in.
-  let signedIn = false
-  try {
-    const loginData = await wpFetch<{
-      login: { authToken: string | null; refreshToken: string | null } | null
-    }>(LOGIN, { username, password }, { securityHeaders })
-
-    const authToken = loginData.login?.authToken
-    const refreshToken = loginData.login?.refreshToken
-
-    if (authToken && refreshToken) {
-      await setSessionCookies({ authToken, refreshToken })
-      signedIn = true
-    }
-  } catch (error) {
-    console.warn('[AliFleet] Account created but auto-login is unavailable.', {
-      code: codeOf(error),
-    })
-  }
-
-  // See the note in loginAction: revalidating here only delays the redirect.
-  // `registered=1` makes the sign-in page explain that the account is ready and
-  // only the automatic sign-in step was skipped.
-  redirect(signedIn ? '/account' : '/account/login?registered=1')
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Sign out                                                                   */
-/* -------------------------------------------------------------------------- */
-
-export async function logoutAction() {
-  await clearSessionCookies()
-
-  // The WooCommerce session cookies survive their own lifetime and carry the
-  // customer's billing details, so signing out left the previous account's
-  // e-mail prefilled in guest checkout — a real privacy problem on a shared
-  // device (RT-09). Dropping them here forces the next handoff to build a
-  // fresh guest session.
-  const jar = await cookies()
-  for (const { name } of jar.getAll()) {
-    if (isWooStateCookie(name) || name === HANDOFF_QUANTITY_COOKIE) jar.delete(name)
-  }
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return errorState(mapAuthError(error, 'login'))
 
   revalidatePath('/', 'layout')
-  redirect('/account/login')
+  redirect(safeRedirect(formData.get('redirectTo')))
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Forgot password                                                            */
-/* -------------------------------------------------------------------------- */
+export async function registerAction(
+  _previous: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const firstName = text(60).safeParse(formData.get('firstName'))
+  const lastName = text(60).safeParse(formData.get('lastName'))
+  const email = emailSchema.safeParse(formData.get('email'))
+  const password = passwordSchema.safeParse(formData.get('password'))
+  const confirmPassword = String(formData.get('confirmPassword') || '')
+  const phone = text(40).safeParse(formData.get('phone') || '')
+  const requestedUsername = String(formData.get('username') || '').trim() || (email.success ? email.data.split('@')[0] : '')
+  const username = usernameSchema.safeParse(requestedUsername)
+
+  if (!firstName.success || !lastName.success || !email.success || !password.success || !phone.success) {
+    return errorState(!email.success ? 'invalid_email' : !password.success ? 'weak_password' : 'missing_fields')
+  }
+  if (!username.success) return errorState('username_exists', 'username')
+  if (password.data !== confirmPassword) return errorState('password_mismatch', 'confirmPassword')
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signUp({
+    email: email.data.toLowerCase(),
+    password: password.data,
+    options: {
+      emailRedirectTo: await callbackUrl('/account'),
+      data: {
+        first_name: firstName.data,
+        last_name: lastName.data,
+        display_name: `${firstName.data} ${lastName.data}`.trim(),
+        username: username.data,
+        phone: phone.data || null,
+        preferred_locale: String(formData.get('locale') || 'ar'),
+      },
+    },
+  })
+
+  if (error) return errorState(mapAuthError(error, 'register'))
+  return { status: 'success' }
+}
+
+export async function logoutAction(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
 
 export async function forgotPasswordAction(
-  _prev: AuthActionState,
-  formData: FormData
+  _previous: AuthActionState,
+  formData: FormData,
 ): Promise<AuthActionState> {
-  if (!isWpConfigured()) return fail('not_configured')
+  const identifier = String(formData.get('usernameOrEmail') || '').trim()
+  if (!identifier) return errorState('missing_fields')
+  const email = await resolveEmail(identifier)
+  if (!email) return { status: 'success' }
 
-  const username = identifier(formData)
-  if (!username) {
-    return fail('missing_fields', { usernameOrEmail: 'missing_fields' })
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: await callbackUrl('/account/update-password'),
+  })
+  if (error?.status === 429 || error?.code?.includes('rate_limit')) {
+    return errorState('rate_limited')
   }
-
-  const securityHeaders = await wordpressSecurityHeaders()
-  try {
-    await wpFetch(SEND_PASSWORD_RESET, { username }, { securityHeaders })
-  } catch (error) {
-    const code = codeOf(error)
-    // WordPress deliberately reveals whether an account exists here. We do not
-    // pass that on — an unknown user still gets the neutral success screen.
-    if (code === 'invalid_credentials' || code === 'unknown') {
-      return { status: 'success' }
-    }
-    return fail(code)
-  }
-
   return { status: 'success' }
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Update profile                                                             */
-/* -------------------------------------------------------------------------- */
+export async function updatePasswordAction(
+  _previous: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const password = passwordSchema.safeParse(formData.get('newPassword'))
+  const confirmation = String(formData.get('confirmPassword') || '')
+  if (!password.success) return errorState('weak_password', 'newPassword')
+  if (password.data !== confirmation) return errorState('password_mismatch', 'confirmPassword')
+
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) return errorState('not_logged_in')
+  const { error } = await supabase.auth.updateUser({ password: password.data })
+  if (error) return errorState(mapAuthError(error, 'reset'))
+  await createAdminClient()
+    .from('admin_memberships')
+    .update({ must_change_password: false })
+    .eq('user_id', userData.user.id)
+  revalidatePath('/', 'layout')
+  return { status: 'success' }
+}
 
 export async function updateProfileAction(
-  _prev: AuthActionState,
-  formData: FormData
+  _previous: AuthActionState,
+  formData: FormData,
 ): Promise<AuthActionState> {
-  if (!isWpConfigured()) return fail('not_configured')
+  const firstName = text(60).safeParse(formData.get('firstName') || '')
+  const lastName = text(60).safeParse(formData.get('lastName') || '')
+  const email = emailSchema.safeParse(formData.get('email'))
+  const newPassword = String(formData.get('newPassword') || '')
+  const confirmPassword = String(formData.get('confirmPassword') || '')
+  if (!firstName.success || !lastName.success || !email.success) return errorState('missing_fields')
+  if (newPassword && !passwordSchema.safeParse(newPassword).success) return errorState('weak_password')
+  if (newPassword !== confirmPassword) return errorState('password_mismatch')
 
-  const firstName = text(formData, 'firstName')
-  const lastName = text(formData, 'lastName')
-  const email = text(formData, 'email')
-  const password = String(formData.get('newPassword') ?? '')
-  const confirm = String(formData.get('confirmPassword') ?? '')
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) return errorState('not_logged_in')
 
-  const fieldErrors: AuthActionState['fieldErrors'] = {}
-  if (!email) fieldErrors.email = 'missing_fields'
-  else if (!looksLikeEmail(email)) fieldErrors.email = 'invalid_email'
-  if (password && password.length < 8) fieldErrors.newPassword = 'weak_password'
-  if (password && password !== confirm) {
-    fieldErrors.confirmPassword = 'password_mismatch'
+  const displayName = `${firstName.data} ${lastName.data}`.trim()
+  const authUpdate = {
+    data: { ...userData.user.user_metadata, first_name: firstName.data, last_name: lastName.data, display_name: displayName },
+    ...(email.data.toLowerCase() !== userData.user.email?.toLowerCase() ? { email: email.data.toLowerCase() } : {}),
+    ...(newPassword ? { password: newPassword } : {}),
   }
-  if (Object.keys(fieldErrors).length) {
-    return fail(
-      fieldErrors.confirmPassword ?? fieldErrors.newPassword ?? 'invalid_email',
-      fieldErrors
-    )
-  }
+  const { error: authError } = await supabase.auth.updateUser(authUpdate)
+  if (authError) return errorState(mapAuthError(authError, 'reset'))
 
-  try {
-    const authToken = await getAuthToken()
-    if (!authToken) return fail('not_logged_in')
-
-    await wpFetch(
-      UPDATE_CUSTOMER_PROFILE,
-      {
-        firstName,
-        lastName,
-        email,
-        // Only send a password when the visitor actually typed a new one.
-        ...(password ? { password } : {}),
-      },
-      { authToken }
-    )
-  } catch (error) {
-    return fail(codeOf(error))
-  }
-
-  revalidatePath('/account')
-  revalidatePath('/account/profile')
+  const { error: profileError } = await supabase.from('profiles').update({ display_name: displayName }).eq('id', userData.user.id)
+  if (profileError) return errorState('unknown')
+  revalidatePath('/account', 'layout')
   return { status: 'success' }
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Update addresses                                                           */
-/* -------------------------------------------------------------------------- */
-
-const ADDRESS_KEYS = [
-  'firstName',
-  'lastName',
-  'company',
-  'address1',
-  'address2',
-  'city',
-  'state',
-  'postcode',
-  'country',
-  'phone',
-] as const
-
-function readAddress(formData: FormData, prefix: 'billing' | 'shipping') {
-  const address: Record<string, string> = {}
-  for (const key of ADDRESS_KEYS) {
-    address[key] = text(formData, `${prefix}_${key}`)
+function addressFromForm(formData: FormData, prefix: 'billing' | 'shipping') {
+  const value = (key: string, max = 250) => String(formData.get(`${prefix}_${key}`) || '').trim().slice(0, max)
+  return {
+    kind: prefix,
+    label: value('company', 120) || (prefix === 'billing' ? 'Billing' : 'Shipping'),
+    full_name: `${value('firstName', 60)} ${value('lastName', 60)}`.trim(),
+    company: value('company', 120) || null,
+    street: value('address1'),
+    address_line_2: value('address2') || null,
+    city: value('city', 120),
+    state: value('state', 120) || null,
+    postal_code: value('postcode', 30) || null,
+    country: value('country', 120),
+    phone: value('phone', 40),
+    is_default: true,
   }
-  if (prefix === 'billing') {
-    const email = text(formData, 'billing_email')
-    if (email) address.email = email
-  }
-  return address
 }
 
 export async function updateAddressesAction(
-  _prev: AuthActionState,
-  formData: FormData
+  _previous: AuthActionState,
+  formData: FormData,
 ): Promise<AuthActionState> {
-  if (!isWpConfigured()) return fail('not_configured')
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) return errorState('not_logged_in')
 
-  const billing = readAddress(formData, 'billing')
-  const shipping = readAddress(formData, 'shipping')
-
-  if (billing.email && !looksLikeEmail(billing.email)) {
-    return fail('invalid_email', { billing_email: 'invalid_email' })
-  }
-
-  try {
-    const authToken = await getAuthToken()
-    if (!authToken) return fail('not_logged_in')
-
-    await wpFetch(
-      UPDATE_CUSTOMER_ADDRESSES,
-      { billing, shipping },
-      { authToken }
-    )
-  } catch (error) {
-    return fail(codeOf(error))
+  for (const kind of ['billing', 'shipping'] as const) {
+    const address = addressFromForm(formData, kind)
+    if (!address.full_name || !address.street || !address.city || !address.country || !address.phone) {
+      return errorState('missing_fields')
+    }
+    const { data: existing, error: lookupError } = await supabase
+      .from('addresses')
+      .select('id')
+      .eq('user_id', userData.user.id)
+      .eq('kind', kind)
+      .eq('is_default', true)
+      .maybeSingle()
+    if (lookupError) return errorState('unknown')
+    const result = existing
+      ? await supabase.from('addresses').update(address).eq('id', existing.id)
+      : await supabase.from('addresses').insert({ ...address, user_id: userData.user.id })
+    if (result.error) return errorState('unknown')
   }
 
   revalidatePath('/account/addresses')
   return { status: 'success' }
-}
-
-/** Blocks scheme-relative, backslash-normalized, encoded, and control-char redirects. */
-function sanitizeRedirect(target: string) {
-  if (!target.startsWith('/') || /[\\\u0000-\u001f\u007f\u2028\u2029]/.test(target)) {
-    return '/account'
-  }
-
-  let decoded = target
-  try {
-    for (let pass = 0; pass < 3; pass += 1) {
-      const next = decodeURIComponent(decoded)
-      if (next === decoded) break
-      decoded = next
-    }
-  } catch {
-    return '/account'
-  }
-
-  if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.includes('\\')) {
-    return '/account'
-  }
-
-  try {
-    const base = new URL('https://alifleet.com')
-    const resolved = new URL(target, base)
-    if (resolved.origin !== base.origin) return '/account'
-    return `${resolved.pathname}${resolved.search}${resolved.hash}`
-  } catch {
-    return '/account'
-  }
 }

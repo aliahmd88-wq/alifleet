@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 import LocaleLink from '@/components/locale-link'
 import { saleCarConditions, saleCarStatuses } from '@/lib/data/sale-cars'
 import type { SaleCar, SaleCarCondition, SaleCarStatus } from '@/lib/data/sale-cars'
-import type { SaleCarsStatus } from '@/lib/wp/sale-cars'
+import type { SaleCarsStatus } from '@/lib/content/sale-cars'
 import { Paginator } from '@/components/paginator'
 import { useLanguage } from '@/lib/i18n/language-context'
 import { resolveCopy } from '@/lib/i18n/copy-block'
-import type { CarsPageCopy } from '@/lib/wp/cars-page'
+import type { CarsPageCopy } from '@/lib/content/types'
 import { SaleCarCard } from '@/components/sale-car-card'
 
 type Props = {
@@ -18,18 +18,12 @@ type Props = {
   copy?: CarsPageCopy['saleHeader']
 }
 
-/**
- * The "for sale" half of /cars. Deliberately mirrors ImportBrowser — same
- * chips, same paginator, same empty/error branches — so the two sections of the
- * page read as one product rather than two bolted-together pages. The filters
- * differ because the data does: condition and availability instead of origin.
- */
 export function SaleBrowser({ cars, status, copy }: Props) {
   const { t, locale } = useLanguage()
   const [condition, setCondition] = useState<SaleCarCondition | 'all'>('all')
   const [carStatus, setCarStatus] = useState<SaleCarStatus | 'all'>('all')
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 24 // 8 rows × 3 cols: the whole import range on one or two pages
+  const PAGE_SIZE = 6 // 2 rows × 3 cols
 
   const filtered = useMemo(
     () =>
@@ -70,38 +64,6 @@ export function SaleBrowser({ cars, status, copy }: Props) {
       {children}
     </section>
   )
-
-  if (status === 'not_configured' || status === 'unreachable') {
-    return (
-      <Shell>
-        <div className="mt-10 rounded-3xl bg-card p-12 text-center ring-1 ring-border">
-          <p className="font-semibold text-foreground">{t.cars.saleUnavailable}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t.cars.saleUnavailableLead}
-          </p>
-          <LocaleLink
-            href="/contact"
-            className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-          >
-            {t.common.callUs}
-          </LocaleLink>
-        </div>
-      </Shell>
-    )
-  }
-
-  if (status === 'acf_missing') {
-    return (
-      <Shell>
-        <div className="mt-10 rounded-3xl border border-destructive/30 bg-destructive/5 p-12 text-center">
-          <p className="font-semibold text-foreground">{t.cars.saleAcfMissing}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t.cars.saleAcfMissingLead}
-          </p>
-        </div>
-      </Shell>
-    )
-  }
 
   if (status === 'empty') {
     return (

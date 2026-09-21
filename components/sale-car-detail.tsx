@@ -27,8 +27,6 @@ export function SaleCarDetail({
   related: SaleCar[]
 }) {
   const { t, locale } = useLanguage()
-  const name = car.subtitle[locale] || car.model
-  const secondary = name === car.model ? '' : car.model
   const store = useStore()
   const images = [{ src: car.image, alt: car.alt }, ...car.gallery]
   const [active, setActive] = useState(0)
@@ -66,7 +64,7 @@ export function SaleCarDetail({
     { label: t.import.seats, value: String(car.specs.seats), ltr: true },
   ].filter((spec) => spec.value)
 
-  const enquiry = `${t.saleDetail.whatsappIntro}\n\n${name}${secondary ? ` (${secondary})` : ''} · ${car.year}\n${t.cars.conditions[car.condition]}\n${typeof window === 'undefined' ? '' : window.location.href}`
+  const enquiry = `${t.saleDetail.whatsappIntro}\n\n${car.model} · ${car.year}\n${t.cars.conditions[car.condition]}\n${typeof window === 'undefined' ? '' : window.location.href}`
 
   return (
     <>
@@ -128,25 +126,11 @@ export function SaleCarDetail({
               {t.cars.conditions[car.condition]} · {car.bodyType[locale]}
             </p>
             <h1 className="mt-3 text-balance font-serif text-3xl leading-tight tracking-tight text-foreground md:text-5xl">
-              {name}
+              {car.model}
             </h1>
             <p className="mt-3 text-pretty leading-relaxed text-muted-foreground">
-              {secondary}
+              {car.subtitle[locale]}
             </p>
-            {car.uses.length > 0 && (
-              <div className="mt-5 grid gap-3">
-                {car.uses.includes('taxi') && (
-                  <p className="rounded-2xl bg-accent/10 px-4 py-3 text-sm leading-relaxed text-foreground">
-                    <strong className="font-semibold">{t.cars.badgeTaxi}.</strong> {t.cars.taxiNote}
-                  </p>
-                )}
-                {car.uses.includes('parallel_import') && (
-                  <p className="rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed text-foreground">
-                    <strong className="font-semibold">{t.cars.badgeParallel}.</strong> {t.cars.parallelNote}
-                  </p>
-                )}
-              </div>
-            )}
 
             <div className="mt-7 rounded-3xl bg-card p-6 ring-1 ring-border">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
